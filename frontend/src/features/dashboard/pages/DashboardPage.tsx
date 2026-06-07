@@ -1,34 +1,81 @@
-import { Card } from '../../../components/ui';
+import { StatCard, ProgressBar, Card } from '../../../components/ui';
 
 export default function DashboardPage() {
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-gray-100">Dashboard</h1>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {/* Hero */}
+      <div className="rounded-lg border border-border bg-container p-6">
+        <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">Level 1</p>
+        <p className="mt-2 text-6xl font-bold text-white tracking-tight">0 XP</p>
+        <p className="mt-2 text-sm text-muted">Complete habits and tasks to earn XP and level up.</p>
+        <div className="mt-6 max-w-md">
+          <ProgressBar value={0} maxValue={100} label="Level Progress" />
+        </div>
+      </div>
+
+      {/* Vital Signs */}
+      <Card>
+        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          Vital Signs
+        </h2>
+        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+          <StatCard title="Focus Time" value="142H" accent="purple" />
+          <StatCard title="Consistency" value="94%" accent="green" />
+          <StatCard title="Tasks Done" value={128} accent="blue" />
+        </div>
+      </Card>
+
+      {/* Current Learning / Priority Tasks */}
+      <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h2 className="text-sm font-medium text-gray-400">XP</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">0</p>
+          <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+            Current Learning
+          </h2>
+          <div className="mt-5 space-y-5">
+            <ProgressBar value={72} maxValue={100} label="Frontend Engineering" />
+            <ProgressBar value={40} maxValue={100} label="Backend Engineering" />
+            <ProgressBar value={25} maxValue={100} label="System Design" />
+          </div>
         </Card>
+
         <Card>
-          <h2 className="text-sm font-medium text-gray-400">Level</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">1</p>
+          <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+            Priority Tasks
+          </h2>
+          <ul className="mt-5 space-y-3">
+            {['Build Auth API', 'Setup Prisma', 'Create Habit CRUD', 'Design XP System'].map((task) => (
+              <li key={task} className="flex items-center gap-3">
+                <div className="h-4 w-4 rounded border border-muted/40" />
+                <span className="text-sm text-muted">{task}</span>
+              </li>
+            ))}
+          </ul>
         </Card>
-        <Card>
-          <h2 className="text-sm font-medium text-gray-400">Habits</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">0</p>
-        </Card>
-        <Card>
-          <h2 className="text-sm font-medium text-gray-400">Tasks</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">0</p>
-        </Card>
-        <Card>
-          <h2 className="text-sm font-medium text-gray-400">Sessions</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">0</p>
-        </Card>
-        <Card>
-          <h2 className="text-sm font-medium text-gray-400">Resources</h2>
-          <p className="mt-1 text-2xl font-bold text-gray-100">0</p>
-        </Card>
+      </div>
+
+      {/* XP Growth */}
+      <Card>
+        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          XP Growth
+        </h2>
+        <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-16">
+          <p className="text-sm text-muted">Analytics chart coming soon</p>
+        </div>
+      </Card>
+
+      {/* Statistics */}
+      <div>
+        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          Statistics
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          <StatCard title="XP" value={0} accent="green" />
+          <StatCard title="Level" value={1} accent="purple" />
+          <StatCard title="Habits" value={0} accent="blue" />
+          <StatCard title="Tasks" value={0} accent="green" />
+          <StatCard title="Sessions" value={0} accent="purple" />
+          <StatCard title="Resources" value={0} accent="blue" />
+        </div>
       </div>
     </div>
   );

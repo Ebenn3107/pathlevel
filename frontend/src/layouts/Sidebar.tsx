@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
 
 interface NavItem {
   to: string;
   label: string;
-  icon: JSX.Element;
+  icon: ReactNode;
 }
 
 const navItems: NavItem[] = [
@@ -56,12 +57,12 @@ const navItems: NavItem[] = [
 
 export default function Sidebar() {
   return (
-    <aside className="flex w-64 flex-col border-r border-gray-800 bg-gray-900">
-      <div className="flex items-center gap-2 border-b border-gray-800 px-6 py-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm font-bold text-white">
+    <aside className="flex w-[260px] flex-col border-r border-border bg-surface">
+      <div className="flex items-center gap-3 border-b border-border px-6 py-5">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-sm font-bold text-white">
           P
         </div>
-        <span className="text-lg font-semibold text-gray-100">PathLevel</span>
+        <span className="text-lg font-semibold tracking-[0.2em] text-white">PATHLEVEL</span>
       </div>
 
       <nav className="flex-1 space-y-1 px-3 py-4">
@@ -70,10 +71,10 @@ export default function Sidebar() {
             key={item.to}
             to={item.to}
             className={({ isActive }) =>
-              `flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
+              `flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-gray-800 text-gray-100'
-                  : 'text-gray-400 hover:bg-gray-800/50 hover:text-gray-200'
+                  ? 'bg-container text-white'
+                  : 'text-muted hover:bg-container/50 hover:text-white'
               }`
             }
           >
@@ -83,10 +84,20 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="border-t border-gray-800 px-6 py-4">
-        <div className="rounded-lg bg-gray-800/50 px-3 py-2">
-          <p className="text-xs text-gray-500">XP</p>
-          <p className="text-sm font-medium text-gray-100">0</p>
+      <div className="border-t border-border px-4 py-4">
+        <div className="rounded-lg bg-container/50 p-3">
+          <div className="flex items-center justify-between">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">Level</p>
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">Rank</p>
+          </div>
+          <div className="mt-1 flex items-center justify-between">
+            <p className="text-lg font-bold text-white">1</p>
+            <p className="text-sm font-medium text-secondary">APPRENTICE</p>
+          </div>
+          <div className="mt-2 border-t border-border/50 pt-2">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted">XP</p>
+            <p className="mt-0.5 text-sm font-medium text-white">0 / 100</p>
+          </div>
         </div>
       </div>
     </aside>

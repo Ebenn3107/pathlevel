@@ -1,8 +1,28 @@
-@import 'tailwindcss';
+@import "tailwindcss";
+
+@font-face {
+  font-family: "Geist Sans";
+  src: url("/fonts/Geist-Variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@theme {
+  --font-sans: "Geist Sans", system-ui, sans-serif;
+  --color-surface: #0e0e0e;
+  --color-container: #1c1b1b;
+  --color-border: #3a3939;
+  --color-primary: #8b5cf6;
+  --color-secondary: #10b981;
+  --color-tertiary: #3b82f6;
+  --color-muted: #a1a1aa;
+}
 
 body {
   margin: 0;
-  font-family: system-ui, 'Segoe UI', Roboto, sans-serif;
+  background: #0e0e0e;
+  color: #ffffff;
+  font-family: "Geist Sans", system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

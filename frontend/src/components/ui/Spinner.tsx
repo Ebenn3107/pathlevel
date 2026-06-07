@@ -13,7 +13,7 @@ const sizeClasses: Record<SpinnerSize, string> = {
 export default function Spinner({ size = 'md' }: SpinnerProps) {
   return (
     <div
-      className={`animate-spin rounded-full border-gray-700 border-t-indigo-500 ${sizeClasses[size]}`}
+      className={`animate-spin rounded-full border-border border-t-primary ${sizeClasses[size]}`}
     />
   );
 }
