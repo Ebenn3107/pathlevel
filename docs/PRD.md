@@ -106,28 +106,7 @@ Reward:
 
 ---
 
-## 3. Learning Roadmap
-
-Purpose:
-Provide structured learning paths.
-
-Features:
-
-* Roadmap graph visualization
-* Roadmap nodes
-* Progress tracking
-* Completion tracking
-
-Initial Roadmaps:
-
-* JavaScript
-* TypeScript
-* React
-* Node.js
-
----
-
-## 4. Learning Resources
+## 3. Learning Resources
 
 Purpose:
 Store references related to roadmap nodes.
@@ -147,7 +126,7 @@ Supported Resources:
 
 ---
 
-## 5. XP & Level System
+## 4. XP & Level System
 
 Purpose:
 Increase motivation through gamification.

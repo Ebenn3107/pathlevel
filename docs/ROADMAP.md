@@ -5,7 +5,7 @@
 Build a personal growth platform that combines:
 
 * Habit Tracking
-* Learning Roadmaps
+* Learning Management
 * Resource Management
 * Progress Analytics
 * Gamification
@@ -26,7 +26,7 @@ Focus on delivering working features first.
 
 ---
 
-# V1 - Foundation Release
+# V1 - Personal Growth Foundation
 
 Status:
 Planned
@@ -40,17 +40,20 @@ Core Features:
 * Authentication
 * Dashboard
 * Habit Tracking
+* Task Management
 * Learning Sessions
-* Learning Resources
+* Resource Library
 * Global XP System
 * Statistics & Analytics
 
 Success Criteria:
 
 * Daily usage is possible
-* XP system works
+* XP system works correctly
 * Habits can be tracked consistently
-* Resources can be managed
+* Tasks can be managed efficiently
+* Learning sessions are recorded
+* Resources can be organized
 * Dashboard provides useful insights
 
 ---
@@ -58,7 +61,7 @@ Success Criteria:
 # V1.5 - Structured Learning
 
 Status:
-Planned
+Future
 
 Goal:
 
@@ -67,20 +70,24 @@ Introduce guided learning journeys.
 Features:
 
 * Focus Areas
-* Learning Goals
 * Learning Roadmaps
+* Roadmap Nodes
 * Roadmap Progress Tracking
-* Roadmap Node Completion
+* Roadmap Completion Tracking
 
 Examples:
 
-Frontend Developer
+* Frontend Developer Path
+* Backend Developer Path
+* JavaScript Mastery
+* React Learning Path
+* Data Structures Path
 
-Backend Developer
+Success Criteria:
 
-JavaScript Mastery
-
-Data Structures
+* Users can follow structured learning paths
+* Progress is visualized clearly
+* Learning journey becomes more organized
 
 ---
 
@@ -91,15 +98,22 @@ Future
 
 Goal:
 
-Increase motivation and progression systems.
+Expand progression and gamification systems.
 
 Features:
 
 * Focus Area XP
 * Focus Area Levels
-* Progress Visualization
-* Roadmap Statistics
+* Achievement System
+* Badge System
 * Advanced Analytics
+* Growth Visualization
+
+Success Criteria:
+
+* Motivation systems increase engagement
+* Progress can be measured per Focus Area
+* Achievements provide additional incentives
 
 ---
 
@@ -110,13 +124,14 @@ Future
 
 Goal:
 
-Prepare mobile expansion.
+Prepare mobile application development.
 
 Deliverables:
 
 * Mobile PRD
 * Mobile UX Design
 * Mobile Wireframes
+* API Review
 * React Native Architecture Planning
 
 No development yet.
@@ -144,7 +159,8 @@ Platforms:
 Features:
 
 * Habit Tracking
-* Learning Tracking
+* Tasks
+* Learning Sessions
 * Roadmap Progress
 * XP System
 * Dashboard
@@ -157,14 +173,13 @@ Uses existing backend APIs.
 
 Potential Features:
 
-* Achievement System
-* Badge System
+* AI Assistant
 * Smart Recommendations
-* Knowledge Base
 * Public Profiles
 * Community Features
-* AI Assistant
 * Team Learning Spaces
+* Knowledge Base
+* Social Accountability System
 
 These features are intentionally postponed until the foundation is stable.
 
@@ -176,7 +191,7 @@ These features are intentionally postponed until the foundation is stable.
 
 Developer Foundation
 
-Completed:
+Deliverables:
 
 * GitHub Setup
 * Git Setup
@@ -200,6 +215,8 @@ Deliverables:
 * Repository Structure
 * Frontend Initialization
 * Backend Initialization
+* Development Rules
+* Documentation Foundation
 
 Status:
 In Progress
@@ -231,6 +248,7 @@ Deliverables:
 * Sidebar
 * Navigation
 * Layout System
+* Responsive Structure
 
 Status:
 Planned
@@ -239,13 +257,15 @@ Planned
 
 ## Sprint 4
 
-Focus Areas
+Habit Module
 
 Deliverables:
 
-* Create Focus Area
-* Edit Focus Area
-* Archive Focus Area
+* Create Habit
+* Edit Habit
+* Delete Habit
+* Complete Habit
+* Habit Statistics
 
 Status:
 Planned
@@ -254,26 +274,13 @@ Planned
 
 ## Sprint 5
 
-Habit Module
-
-Deliverables:
-
-* Create Habit
-* Habit Completion
-* Habit Statistics
-
-Status:
-Planned
-
----
-
-## Sprint 6
-
 Task Module
 
 Deliverables:
 
 * Create Task
+* Edit Task
+* Delete Task
 * Complete Task
 * Task Statistics
 
@@ -282,22 +289,23 @@ Planned
 
 ---
 
-## Sprint 7
+## Sprint 6
 
 Learning Sessions
 
 Deliverables:
 
 * Session Tracking
-* Notes
+* Session Notes
 * Duration Tracking
+* Learning Statistics
 
 Status:
 Planned
 
 ---
 
-## Sprint 8
+## Sprint 7
 
 Resource Library
 
@@ -306,6 +314,23 @@ Deliverables:
 * Save Resources
 * Categorize Resources
 * Search Resources
+* Resource Management
+
+Status:
+Planned
+
+---
+
+## Sprint 8
+
+XP & Level System
+
+Deliverables:
+
+* Global XP
+* User Level
+* XP History
+* XP Rewards
 
 Status:
 Planned
@@ -319,7 +344,9 @@ Dashboard
 Deliverables:
 
 * XP Overview
-* Streak Overview
+* Habit Overview
+* Task Overview
+* Learning Overview
 * Quick Statistics
 
 Status:
@@ -333,9 +360,40 @@ Analytics
 
 Deliverables:
 
-* Learning Analytics
 * Habit Analytics
+* Task Analytics
+* Learning Analytics
 * Progress Reports
 
 Status:
 Planned
+
+---
+
+# Post V1 Roadmap
+
+## Sprint 11
+
+Focus Areas
+
+## Sprint 12
+
+Learning Roadmaps
+
+## Sprint 13
+
+Roadmap Nodes
+
+## Sprint 14
+
+Roadmap Progress
+
+These sprints belong to V1.5 and are intentionally postponed until V1 is stable.
+
+---
+
+Version:
+V1.1
+
+Status:
+Approved

@@ -1,0 +1,32 @@
+import api from '../../../services/api';
+import type { ApiResponse } from '../../../types';
+import type { Habit, CreateHabitInput, UpdateHabitInput } from '../types';
+
+export async function getHabits(): Promise<Habit[]> {
+  const { data } = await api.get<ApiResponse<Habit[]>>('/habits');
+  return data.data;
+}
+
+export async function getHabit(id: string): Promise<Habit> {
+  const { data } = await api.get<ApiResponse<Habit>>(`/habits/${id}`);
+  return data.data;
+}
+
+export async function createHabit(input: CreateHabitInput): Promise<Habit> {
+  const { data } = await api.post<ApiResponse<Habit>>('/habits', input);
+  return data.data;
+}
+
+export async function updateHabit(id: string, input: UpdateHabitInput): Promise<Habit> {
+  const { data } = await api.put<ApiResponse<Habit>>(`/habits/${id}`, input);
+  return data.data;
+}
+
+export async function deleteHabit(id: string): Promise<void> {
+  await api.delete(`/habits/${id}`);
+}
+
+export async function completeHabit(id: string): Promise<Habit> {
+  const { data } = await api.post<ApiResponse<Habit>>(`/habits/${id}/complete`);
+  return data.data;
+}
