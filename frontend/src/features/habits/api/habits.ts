@@ -18,7 +18,7 @@ export async function createHabit(input: CreateHabitInput): Promise<Habit> {
 }
 
 export async function updateHabit(id: string, input: UpdateHabitInput): Promise<Habit> {
-  const { data } = await api.put<ApiResponse<Habit>>(`/habits/${id}`, input);
+  const { data } = await api.patch<ApiResponse<Habit>>(`/habits/${id}`, input);
   return data.data;
 }
 
