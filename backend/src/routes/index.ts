@@ -5,6 +5,7 @@ import habitRoutes from "./habitRoutes";
 import taskRoutes from "./taskRoutes";
 import learningRoutes from "./learningRoutes";
 import xpRoutes from "./xpRoutes";
+import resourceRoutes from "./resourceRoutes";
 
 const router = Router();
 
@@ -14,5 +15,6 @@ router.use("/habits", habitRoutes);
 router.use("/tasks", taskRoutes);
 router.use("/learning", learningRoutes);
 router.use("/xp", xpRoutes);
+router.use("/resources", resourceRoutes);
 
 export default router;
