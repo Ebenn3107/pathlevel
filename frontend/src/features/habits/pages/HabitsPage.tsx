@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, Spinner, Button, Modal, ConfirmDialog } from '../../../components/ui';
 import { useHabits } from '../hooks/useHabits';
-import { useCreateHabit, useUpdateHabit, useDeleteHabit } from '../hooks/useHabitMutations';
+import { useCreateHabit, useUpdateHabit, useDeleteHabit, useCompleteHabit } from '../hooks/useHabitMutations';
 import HabitForm from '../components/HabitForm';
 import type { Habit, CreateHabitInput } from '../types';
 
@@ -10,6 +10,7 @@ export default function HabitsPage() {
 
   const createMutation = useCreateHabit();
   const deleteMutation = useDeleteHabit();
+  const completeMutation = useCompleteHabit();
 
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
@@ -93,6 +94,16 @@ export default function HabitsPage() {
                 )}
               </div>
               <div className="flex items-center gap-4 shrink-0">
+                <button
+                  onClick={() => completeMutation.mutate(habit.id)}
+                  disabled={completeMutation.isPending}
+                  className="shrink-0 h-8 w-8 rounded-full border-2 border-primary/40 flex items-center justify-center transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-50"
+                  title="Complete habit"
+                >
+                  <svg className="h-4 w-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                  </svg>
+                </button>
                 <span className="text-xs font-medium uppercase tracking-wider text-muted">
                   {habit.frequency}
                 </span>

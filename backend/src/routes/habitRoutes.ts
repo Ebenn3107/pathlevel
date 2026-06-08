@@ -6,12 +6,14 @@ import {
   completeHabitHandler,
   deleteHabitHandler,
 } from "../controllers/habitController";
+import { validate } from "../middlewares/validate";
+import { createHabitSchema, updateHabitSchema } from "../validators/habits";
 
 const router = Router();
 
 router.get("/", listHabits);
-router.post("/", createHabitHandler);
-router.patch("/:id", updateHabitHandler);
+router.post("/", validate(createHabitSchema), createHabitHandler);
+router.patch("/:id", validate(updateHabitSchema), updateHabitHandler);
 router.post("/:id/complete", completeHabitHandler);
 router.delete("/:id", deleteHabitHandler);
 

@@ -30,41 +30,44 @@ export function xpForLevel(level: number): number {
   return Math.max(0, (level - 1) * XP_PER_LEVEL);
 }
 
-/** Record an XP transaction and update the user aggregate. */
+/** Record an XP transaction and update the user aggregate atomically. */
 export async function recordXp(
   userId: string,
   amount: number,
   reason: string,
   reference?: string,
 ) {
-  // Idempotency: skip if a transaction already exists for (reason, reference)
-  if (reference) {
-    const existing = await prisma.xpTransaction.findFirst({
-      where: { userId, reason, reference },
+  return prisma.$transaction(async (tx) => {
+    // Idempotency: skip if a transaction already exists for (reason, reference)
+    if (reference) {
+      const existing = await tx.xpTransaction.findFirst({
+        where: { userId, reason, reference },
+      });
+      if (existing) return existing;
+    }
+
+    const transaction = await tx.xpTransaction.create({
+      data: { userId, amount, reason, reference: reference ?? null },
     });
-    if (existing) return existing;
-  }
 
-  const transaction = await prisma.xpTransaction.create({
-    data: { userId, amount, reason, reference: reference ?? null },
+    // Recalculate total XP from all transactions
+    const aggregate = await tx.xpTransaction.aggregate({
+      where: { userId },
+      _sum: { amount: true },
+    });
+    const totalXp = aggregate._sum.amount ?? 0;
+    const level = calculateLevel(totalXp);
+
+    // Update user aggregate (best-effort — user may not exist yet)
+    await tx.user.update({
+      where: { id: userId },
+      data: { xp: totalXp, level },
+    }).catch((err) => {
+      console.warn(`[xp] User ${userId} not found — XP tracked via XpTransaction only:`, err.message);
+    });
+
+    return transaction;
   });
-
-  // Update user aggregate (best-effort — user may not exist yet)
-  const aggregate = await prisma.xpTransaction.aggregate({
-    where: { userId },
-    _sum: { amount: true },
-  });
-  const totalXp = aggregate._sum.amount ?? 0;
-  const level = calculateLevel(totalXp);
-
-  await prisma.user.update({
-    where: { id: userId },
-    data: { xp: totalXp, level },
-  }).catch(() => {
-    // User doesn't exist yet — aggregate is still tracked via XpTransaction
-  });
-
-  return transaction;
 }
 
 /** Get XP summary for a user. */

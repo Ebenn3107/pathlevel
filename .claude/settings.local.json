@@ -10,7 +10,10 @@
       "Bash(cd /c)",
       "Bash(npx --package typescript tsc --noEmit --project \"\\\\\\\\wsl.localhost\\\\Ubuntu-24.04\\\\home\\\\eben\\\\projects\\\\pathlevel\\\\backend\\\\tsconfig.json\")",
       "Bash(npx --package typescript tsc --noEmit --project \"//wsl.localhost/Ubuntu-24.04/home/eben/projects/pathlevel/backend/tsconfig.json\")",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(npx ts-node *)",
+      "Bash(echo 'console.log\\(\"ts-node file works\"\\)')",
+      "Bash(rm /c/tmp/test-ts.ts)"
     ]
   },
   "enabledMcpjsonServers": [

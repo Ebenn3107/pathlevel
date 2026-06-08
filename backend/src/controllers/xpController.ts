@@ -1,11 +1,11 @@
 import type { RequestHandler } from "express";
 import { getXpSummary } from "../services/xpService";
+import { getUserId } from "../middlewares/auth";
 
 /** GET /api/xp */
-export const getXpSummaryHandler: RequestHandler = async (_req, res, next) => {
+export const getXpSummaryHandler: RequestHandler = async (req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    const summary = await getXpSummary("placeholder-user-id");
+    const summary = await getXpSummary(getUserId(req));
     res.json({ success: true, data: summary });
   } catch (err) {
     next(err);

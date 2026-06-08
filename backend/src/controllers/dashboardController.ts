@@ -1,11 +1,11 @@
 import type { RequestHandler } from "express";
 import { getDashboard } from "../services/dashboardService";
+import { getUserId } from "../middlewares/auth";
 
 /** GET /api/dashboard */
-export const getDashboardSummary: RequestHandler = async (_req, res, next) => {
+export const getDashboardSummary: RequestHandler = async (req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    const summary = await getDashboard("placeholder-user-id");
+    const summary = await getDashboard(getUserId(req));
     res.json({ success: true, data: summary });
   } catch (err) {
     next(err);

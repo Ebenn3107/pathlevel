@@ -1,5 +1,7 @@
 import { Router } from "express";
 import healthRoutes from "./healthRoutes";
+import authRoutes from "./authRoutes";
+import { authenticate } from "../middlewares/auth";
 import dashboardRoutes from "./dashboardRoutes";
 import habitRoutes from "./habitRoutes";
 import taskRoutes from "./taskRoutes";
@@ -9,7 +11,12 @@ import resourceRoutes from "./resourceRoutes";
 
 const router = Router();
 
+// Public routes
 router.use("/health", healthRoutes);
+router.use("/auth", authRoutes);
+
+// Protected routes (require valid JWT)
+router.use(authenticate);
 router.use("/dashboard", dashboardRoutes);
 router.use("/habits", habitRoutes);
 router.use("/tasks", taskRoutes);
