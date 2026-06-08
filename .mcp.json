@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "tasks": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/eben/projects/pathlevel/claude-task-mcp/dist/index.js"
+      ],
+      "env": {}
+    }
+  }
+}

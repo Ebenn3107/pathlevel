@@ -1,15 +1,40 @@
-import { StatCard, ProgressBar, Card } from '../../../components/ui';
+import { StatCard, ProgressBar, Card, Spinner } from '../../../components/ui';
+import { useDashboard } from '../hooks/useDashboard';
 
 export default function DashboardPage() {
+  const { data, isLoading, isError, error } = useDashboard();
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-32">
+        <Spinner size="lg" />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-center">
+        <p className="text-red-400 text-sm">
+          {error instanceof Error ? error.message : 'Failed to load dashboard data.'}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       {/* Hero */}
       <div className="rounded-lg border border-border bg-container p-6">
-        <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">Level 1</p>
-        <p className="mt-2 text-6xl font-bold text-white tracking-tight">0 XP</p>
+        <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">
+          Level {data?.level ?? 1}
+        </p>
+        <p className="mt-2 text-6xl font-bold text-white tracking-tight">
+          {data ? `${data.xp.toLocaleString()} XP` : '0 XP'}
+        </p>
         <p className="mt-2 text-sm text-muted">Complete habits and tasks to earn XP and level up.</p>
         <div className="mt-6 max-w-md">
-          <ProgressBar value={0} maxValue={100} label="Level Progress" />
+          <ProgressBar value={data?.xp ?? 0} maxValue={100} label="Level Progress" />
         </div>
       </div>
 
@@ -69,11 +94,11 @@ export default function DashboardPage() {
           Statistics
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard title="XP" value={0} accent="green" />
-          <StatCard title="Level" value={1} accent="purple" />
-          <StatCard title="Habits" value={0} accent="blue" />
-          <StatCard title="Tasks" value={0} accent="green" />
-          <StatCard title="Sessions" value={0} accent="purple" />
+          <StatCard title="XP" value={data?.xp ?? 0} accent="green" />
+          <StatCard title="Level" value={data?.level ?? 1} accent="purple" />
+          <StatCard title="Habits" value={data?.activeHabits ?? 0} accent="blue" />
+          <StatCard title="Tasks" value={data?.pendingTasks ?? 0} accent="green" />
+          <StatCard title="Sessions" value={data?.todayLearningMinutes ?? 0} accent="purple" />
           <StatCard title="Resources" value={0} accent="blue" />
         </div>
       </div>

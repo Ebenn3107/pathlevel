@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm --version)",
+      "Bash(npm init *)",
+      "Read(///wsl.localhost/Ubuntu-24.04/home/eben/projects/pathlevel/**)",
+      "Bash(npm install *)",
+      "Bash(cmd.exe *)",
+      "Bash(node -e \"process.chdir\\('//wsl.localhost/Ubuntu-24.04/home/eben/projects/pathlevel/backend'\\); require\\('./node_modules/typescript/lib/typescript.js'\\).createProgram\\({ options: { noEmit: true, project: './tsconfig.json' }, rootNames: [] }\\)\")",
+      "Bash(cd /c)",
+      "Bash(npx --package typescript tsc --noEmit --project \"\\\\\\\\wsl.localhost\\\\Ubuntu-24.04\\\\home\\\\eben\\\\projects\\\\pathlevel\\\\backend\\\\tsconfig.json\")",
+      "Bash(npx --package typescript tsc --noEmit --project \"//wsl.localhost/Ubuntu-24.04/home/eben/projects/pathlevel/backend/tsconfig.json\")",
+      "Bash(node *)"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "tasks"
+  ]
+}
