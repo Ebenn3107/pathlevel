@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { useAuth } from '../features/auth/hooks/useAuth';
 
 interface NavItem {
   to: string;
@@ -56,6 +57,8 @@ const navItems: NavItem[] = [
 ];
 
 export default function Sidebar() {
+  const { user, logout } = useAuth();
+
   return (
     <aside className="flex w-[260px] flex-col border-r border-border bg-surface">
       <div className="flex items-center gap-3 border-b border-border px-6 py-5">
@@ -91,13 +94,27 @@ export default function Sidebar() {
             <p className="text-xs uppercase tracking-[0.2em] text-muted">Rank</p>
           </div>
           <div className="mt-1 flex items-center justify-between">
-            <p className="text-lg font-bold text-white">1</p>
+            <p className="text-lg font-bold text-white">{user?.level ?? 1}</p>
             <p className="text-sm font-medium text-secondary">APPRENTICE</p>
           </div>
           <div className="mt-2 border-t border-border/50 pt-2">
             <p className="text-xs uppercase tracking-[0.2em] text-muted">XP</p>
-            <p className="mt-0.5 text-sm font-medium text-white">0 / 100</p>
+            <p className="mt-0.5 text-sm font-medium text-white">
+              {user?.xp ?? 0} / 100
+            </p>
           </div>
+        </div>
+        <div className="mt-3 flex items-center justify-between px-1">
+          <span className="text-xs text-muted truncate">{user?.username ?? 'User'}</span>
+          <button
+            onClick={logout}
+            className="text-xs text-muted hover:text-red-400 transition-colors"
+            title="Logout"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+            </svg>
+          </button>
         </div>
       </div>
     </aside>
