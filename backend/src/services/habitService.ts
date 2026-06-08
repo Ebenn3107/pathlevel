@@ -78,6 +78,26 @@ export async function updateHabit(
   }
 }
 
+/** Complete a habit — increments streak and updates best streak. */
+export async function completeHabit(
+  id: string,
+  userId: string,
+): Promise<HabitResponse> {
+  const current = await prisma.habit.findUnique({ where: { id, userId } });
+  if (!current) throw new NotFoundError("Habit");
+
+  const newStreak = current.streak + 1;
+  const newBestStreak = Math.max(current.bestStreak, newStreak);
+
+  return prisma.habit.update({
+    where: { id, userId },
+    data: {
+      streak: newStreak,
+      bestStreak: newBestStreak,
+    },
+  });
+}
+
 /** Delete a habit for a user. */
 export async function deleteHabit(
   id: string,

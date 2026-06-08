@@ -1,11 +1,13 @@
 import type { RequestHandler } from "express";
-import { getHabits, createHabit, updateHabit, deleteHabit } from "../services/habitService";
+import { getHabits, createHabit, updateHabit, deleteHabit, completeHabit } from "../services/habitService";
+import { recordXp, XP_VALUES } from "../services/xpService";
+
+const USER_ID = "placeholder-user-id"; // TODO: extract from authenticated request
 
 /** GET /api/habits */
 export const listHabits: RequestHandler = async (_req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    const habits = await getHabits("placeholder-user-id");
+    const habits = await getHabits(USER_ID);
     res.json({ success: true, data: habits });
   } catch (err) {
     next(err);
@@ -15,8 +17,7 @@ export const listHabits: RequestHandler = async (_req, res, next) => {
 /** POST /api/habits */
 export const createHabitHandler: RequestHandler = async (req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    const habit = await createHabit("placeholder-user-id", req.body);
+    const habit = await createHabit(USER_ID, req.body);
     res.status(201).json({ success: true, data: habit });
   } catch (err) {
     next(err);
@@ -26,8 +27,19 @@ export const createHabitHandler: RequestHandler = async (req, res, next) => {
 /** PATCH /api/habits/:id */
 export const updateHabitHandler: RequestHandler = async (req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    const habit = await updateHabit(req.params.id as string, "placeholder-user-id", req.body);
+    const habit = await updateHabit(req.params.id as string, USER_ID, req.body);
+    res.json({ success: true, data: habit });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/** POST /api/habits/:id/complete */
+export const completeHabitHandler: RequestHandler = async (req, res, next) => {
+  try {
+    const habit = await completeHabit(req.params.id as string, USER_ID);
+    // Award XP for each habit completion (no idempotency — every completion counts)
+    await recordXp(USER_ID, XP_VALUES.habit_completed, "habit_completed").catch(() => {});
     res.json({ success: true, data: habit });
   } catch (err) {
     next(err);
@@ -37,8 +49,7 @@ export const updateHabitHandler: RequestHandler = async (req, res, next) => {
 /** DELETE /api/habits/:id */
 export const deleteHabitHandler: RequestHandler = async (req, res, next) => {
   try {
-    // TODO: extract userId from authenticated request
-    await deleteHabit(req.params.id as string, "placeholder-user-id");
+    await deleteHabit(req.params.id as string, USER_ID);
     res.status(204).send();
   } catch (err) {
     next(err);

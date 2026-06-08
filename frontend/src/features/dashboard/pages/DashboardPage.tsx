@@ -1,5 +1,25 @@
-import { StatCard, ProgressBar, Card, Spinner } from '../../../components/ui';
+import { StatCard, Card, Spinner } from '../../../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
+
+function formatMinutes(minutes: number): string {
+  if (minutes >= 60) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${minutes}m`;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 export default function DashboardPage() {
   const { data, isLoading, isError, error } = useDashboard();
@@ -24,71 +44,165 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Hero */}
+      {/* ── Hero ────────────────────────────────────── */}
       <div className="rounded-lg border border-border bg-container p-6">
-        <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">
-          Level {data?.level ?? 1}
-        </p>
-        <p className="mt-2 text-6xl font-bold text-white tracking-tight">
-          {data ? `${data.xp.toLocaleString()} XP` : '0 XP'}
-        </p>
-        <p className="mt-2 text-sm text-muted">Complete habits and tasks to earn XP and level up.</p>
+        <div className="flex items-baseline justify-between">
+          <div>
+            <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">
+              Level {data?.level ?? 1}
+            </p>
+            <p className="mt-2 text-6xl font-bold text-white tracking-tight">
+              {data ? `${data.xp.toLocaleString()} XP` : '0 XP'}
+            </p>
+            <p className="mt-1 text-sm text-muted">
+              {data && data.xpRemaining > 0
+                ? `${data.xpRemaining} XP to reach Level ${data.level + 1}`
+                : data && data.level >= 1
+                  ? 'Maximum level reached!'
+                  : 'Complete habits and tasks to earn XP and level up.'}
+            </p>
+          </div>
+          {data && (
+            <div className="text-right">
+              <p className="text-3xl font-bold text-white">{data.level}</p>
+              <p className="text-xs text-muted">Current Level</p>
+            </div>
+          )}
+        </div>
         <div className="mt-6 max-w-md">
-          <ProgressBar value={data?.xp ?? 0} maxValue={100} label="Level Progress" />
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs text-muted">Level Progress</span>
+            <span className="text-xs text-muted">
+              {data?.levelProgress ?? 0} / 100 XP
+            </span>
+          </div>
+          <div className="h-2 w-full overflow-hidden rounded-full bg-border">
+            <div
+              className="h-full rounded-full bg-primary transition-all duration-500"
+              style={{ width: `${Math.min(100, ((data?.levelProgress ?? 0) / 100) * 100)}%` }}
+            />
+          </div>
         </div>
       </div>
 
-      {/* Vital Signs */}
+      {/* ── Vital Signs ────────────────────────────── */}
       <Card>
         <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
           Vital Signs
         </h2>
         <div className="mt-5 grid gap-4 sm:grid-cols-3">
-          <StatCard title="Focus Time" value="142H" accent="purple" />
+          <StatCard
+            title="Focus Time"
+            value={data ? formatMinutes(data.todayLearningMinutes) : '0m'}
+            accent="purple"
+          />
           <StatCard title="Consistency" value="94%" accent="green" />
-          <StatCard title="Tasks Done" value={128} accent="blue" />
+          <StatCard
+            title="Tasks Done"
+            value={data?.completedTasks ?? 0}
+            accent="blue"
+          />
         </div>
       </Card>
 
-      {/* Current Learning / Priority Tasks */}
+      {/* ── Quick Stats / Learning Activity ────────── */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
           <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-            Current Learning
+            Today's Learning
           </h2>
-          <div className="mt-5 space-y-5">
-            <ProgressBar value={72} maxValue={100} label="Frontend Engineering" />
-            <ProgressBar value={40} maxValue={100} label="Backend Engineering" />
-            <ProgressBar value={25} maxValue={100} label="System Design" />
+          <div className="mt-5 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Time spent</span>
+              <span className="text-lg font-semibold text-white">
+                {data ? formatMinutes(data.todayLearningMinutes) : '0m'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Active habits</span>
+              <span className="text-lg font-semibold text-white">{data?.activeHabits ?? 0}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted">Pending tasks</span>
+              <span className="text-lg font-semibold text-white">{data?.pendingTasks ?? 0}</span>
+            </div>
           </div>
         </Card>
 
         <Card>
           <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-            Priority Tasks
+            Quick Actions
           </h2>
-          <ul className="mt-5 space-y-3">
-            {['Build Auth API', 'Setup Prisma', 'Create Habit CRUD', 'Design XP System'].map((task) => (
-              <li key={task} className="flex items-center gap-3">
-                <div className="h-4 w-4 rounded border border-muted/40" />
-                <span className="text-sm text-muted">{task}</span>
-              </li>
-            ))}
-          </ul>
+          <div className="mt-5 space-y-4">
+            <a
+              href="/habits"
+              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
+            >
+              <div className="h-2 w-2 rounded-full bg-secondary" />
+              Track a new habit
+            </a>
+            <a
+              href="/tasks"
+              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
+            >
+              <div className="h-2 w-2 rounded-full bg-tertiary" />
+              {data?.pendingTasks && data.pendingTasks > 0
+                ? `${data.pendingTasks} pending task${data.pendingTasks !== 1 ? 's' : ''}`
+                : 'Create a new task'}
+            </a>
+            <a
+              href="/learning"
+              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
+            >
+              <div className="h-2 w-2 rounded-full bg-primary" />
+              Start a learning session
+            </a>
+          </div>
         </Card>
       </div>
 
-      {/* XP Growth */}
+      {/* ── XP Growth ──────────────────────────────── */}
       <Card>
         <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          XP Growth
+          Recent XP Activity
         </h2>
-        <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-16">
-          <p className="text-sm text-muted">Analytics chart coming soon</p>
-        </div>
+        {data?.recentActivity && data.recentActivity.length > 0 ? (
+          <div className="mt-5 space-y-1">
+            {data.recentActivity.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
+              >
+                <div className="flex items-center gap-3">
+                  <div
+                    className={`h-2 w-2 rounded-full ${
+                      entry.amount > 0 ? 'bg-secondary' : 'bg-red-400'
+                    }`}
+                  />
+                  <span className="text-sm text-muted">{entry.reason}</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className={`text-sm font-medium ${entry.amount > 0 ? 'text-secondary' : 'text-red-400'}`}>
+                    {entry.amount > 0 ? '+' : ''}{entry.amount} XP
+                  </span>
+                  <span className="text-xs text-muted">{timeAgo(entry.createdAt)}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-10">
+            <div className="text-center">
+              <p className="text-sm text-muted">No activity yet</p>
+              <p className="mt-1 text-xs text-muted/60">
+                Complete habits, tasks, and learning sessions to earn XP.
+              </p>
+            </div>
+          </div>
+        )}
       </Card>
 
-      {/* Statistics */}
+      {/* ── Statistics ─────────────────────────────── */}
       <div>
         <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
           Statistics
@@ -97,9 +211,9 @@ export default function DashboardPage() {
           <StatCard title="XP" value={data?.xp ?? 0} accent="green" />
           <StatCard title="Level" value={data?.level ?? 1} accent="purple" />
           <StatCard title="Habits" value={data?.activeHabits ?? 0} accent="blue" />
-          <StatCard title="Tasks" value={data?.pendingTasks ?? 0} accent="green" />
-          <StatCard title="Sessions" value={data?.todayLearningMinutes ?? 0} accent="purple" />
-          <StatCard title="Resources" value={0} accent="blue" />
+          <StatCard title="Tasks Pending" value={data?.pendingTasks ?? 0} accent="green" />
+          <StatCard title="Tasks Done" value={data?.completedTasks ?? 0} accent="purple" />
+          <StatCard title="Focus Today" value={data ? formatMinutes(data.todayLearningMinutes) : '0m'} accent="blue" />
         </div>
       </div>
     </div>
