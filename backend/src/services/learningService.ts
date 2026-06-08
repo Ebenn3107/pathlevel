@@ -1,5 +1,6 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
+import { NotFoundError } from "../types/error";
 
 export interface LearningSessionResponse {
   id: string;
@@ -27,13 +28,7 @@ export interface UpdateLearningInput {
   endedAt?: string | null;
 }
 
-export class NotFoundError extends Error {
-  statusCode = 404;
-  constructor(resource: string) {
-    super(`${resource} not found`);
-    this.name = "NotFoundError";
-  }
-}
+
 
 /** Get all learning sessions for a user. */
 export async function getSessions(userId: string): Promise<LearningSessionResponse[]> {

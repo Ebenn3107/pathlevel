@@ -1,5 +1,6 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
+import { NotFoundError } from "../types/error";
 
 export interface TaskResponse {
   id: string;
@@ -28,13 +29,6 @@ export interface UpdateTaskInput {
   dueDate?: string | null;
 }
 
-export class NotFoundError extends Error {
-  statusCode = 404;
-  constructor(resource: string) {
-    super(`${resource} not found`);
-    this.name = "NotFoundError";
-  }
-}
 
 /** Get all tasks for a user. */
 export async function getTasks(userId: string): Promise<TaskResponse[]> {

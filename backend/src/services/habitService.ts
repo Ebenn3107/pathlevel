@@ -1,5 +1,6 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
+import { NotFoundError } from "../types/error";
 
 export interface HabitResponse {
   id: string;
@@ -24,13 +25,7 @@ export interface UpdateHabitInput {
   frequency?: string;
 }
 
-export class NotFoundError extends Error {
-  statusCode = 404;
-  constructor(resource: string) {
-    super(`${resource} not found`);
-    this.name = "NotFoundError";
-  }
-}
+
 
 /** Get all habits for a user. */
 export async function getHabits(userId: string): Promise<HabitResponse[]> {
