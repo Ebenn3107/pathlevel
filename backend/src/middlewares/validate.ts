@@ -16,7 +16,7 @@ export function validate(schema: ZodSchema): RequestHandler {
 
       _res.status(400).json({
         success: false,
-        error: "Validation failed",
+        message: "Validation failed",
         details: errors,
       });
       return;

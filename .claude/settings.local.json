@@ -13,7 +13,20 @@
       "Bash(node *)",
       "Bash(npx ts-node *)",
       "Bash(echo 'console.log\\(\"ts-node file works\"\\)')",
-      "Bash(rm /c/tmp/test-ts.ts)"
+      "Bash(rm /c/tmp/test-ts.ts)",
+      "Bash(npx prisma *)",
+      "Bash(where npx *)",
+      "Read(//c/nvm4w/nodejs/**)",
+      "Bash(npx --version)",
+      "Bash(npx --prefix \"//wsl.localhost/Ubuntu-24.04/home/eben/projects/pathlevel/backend\" prisma migrate dev --name add_achievements --skip-generate)",
+      "Bash(echo @echo off)",
+      "Bash(echo Z:)",
+      "Bash(echo cd *)",
+      "Bash(echo npx *)",
+      "Bash(echo exit *)",
+      "Bash(wsl.exe *)",
+      "Bash(echo pushd *)",
+      "Bash(echo popd *)"
     ]
   },
   "enabledMcpjsonServers": [

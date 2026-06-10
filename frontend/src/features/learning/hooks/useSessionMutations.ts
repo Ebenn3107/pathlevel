@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createSession, updateSession, deleteSession } from '../api/learning';
 import { learningKeys } from '../query-keys';
+import { showAchievementNotifications } from '../../achievements/components/AchievementNotification';
 import type { CreateLearningInput, UpdateLearningInput } from '../types';
 
 export function useCreateSession() {
@@ -19,9 +20,13 @@ export function useUpdateSession(id: string) {
 
   return useMutation({
     mutationFn: (input: UpdateLearningInput) => updateSession(id, input),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: learningKeys.lists() });
       queryClient.invalidateQueries({ queryKey: learningKeys.detail(id) });
+
+      if (result.newAchievements && result.newAchievements.length > 0) {
+        showAchievementNotifications(result.newAchievements);
+      }
     },
   });
 }

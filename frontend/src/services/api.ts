@@ -20,6 +20,15 @@ api.interceptors.response.use(
       localStorage.removeItem('token');
       window.location.href = '/login';
     }
+
+    // Extract user-friendly message from API response into the error message
+    // so TanStack Query and UI components display the right text.
+    if (error.response?.data?.message) {
+      error.message = error.response.data.message;
+    } else if (error.response?.data?.error) {
+      error.message = error.response.data.error;
+    }
+
     return Promise.reject(error);
   },
 );

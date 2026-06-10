@@ -16,4 +16,25 @@ export interface DashboardSummary {
   todayLearningMinutes: number;
   completedTasks: number;
   recentActivity: ActivityEntry[];
+  recentAchievements: {
+    code: string;
+    title: string;
+    description: string;
+    icon: string;
+    unlockedAt: string;
+  }[];
+  weeklyXp: number;
+  weeklyCompletedTasks: number;
+  topStreak: number;
+  topStreakHabits: {
+    id: string;
+    title: string;
+    streak: number;
+    frequency: string;
+  }[];
+  achievementProgress: {
+    unlocked: number;
+    total: number;
+    percentage: number;
+  };
 }

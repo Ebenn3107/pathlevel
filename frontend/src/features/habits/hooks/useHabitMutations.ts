@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createHabit, updateHabit, deleteHabit, completeHabit } from '../api/habits';
 import { habitKeys } from '../query-keys';
+import { showAchievementNotifications } from '../../achievements/components/AchievementNotification';
 import type { CreateHabitInput, UpdateHabitInput } from '../types';
 
 export function useCreateHabit() {
@@ -42,9 +43,13 @@ export function useCompleteHabit() {
 
   return useMutation({
     mutationFn: (id: string) => completeHabit(id),
-    onSuccess: (_, id) => {
+    onSuccess: (result, id) => {
       queryClient.invalidateQueries({ queryKey: habitKeys.lists() });
       queryClient.invalidateQueries({ queryKey: habitKeys.detail(id) });
+
+      if (result.newAchievements && result.newAchievements.length > 0) {
+        showAchievementNotifications(result.newAchievements);
+      }
     },
   });
 }

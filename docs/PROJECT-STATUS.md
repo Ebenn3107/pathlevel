@@ -19,26 +19,21 @@ Active Development
 # Current Phase
 
 Phase:
-Foundation & Initialization
+Core Feature Buildout
 
 Current Sprint:
-Sprint 1
+Sprint 5
 
 Sprint Status:
-In Progress
+Completed
 
 ---
 
 # Current Objective
 
-Initialize the project foundation before feature development begins.
+Sprint 5 — Production Hardening completed.
 
-Focus Areas:
-
-* Frontend Initialization
-* Backend Initialization
-* Database Preparation
-* Development Workflow
+Environment variable validation, helmet security headers, rate limiting on auth routes, database health check, 404 handler, root .gitignore, and dependency cleanup. Ready for deployment provider selection.
 
 ---
 
@@ -101,51 +96,104 @@ Completed
 
 ---
 
-# Current Tasks
-
-## Sprint 1
-
-Frontend Initialization
+## Sprint 1 — Foundation & Core Modules
 
 Deliverables:
 
-* React Setup
-* TypeScript Setup
-* Vite Setup
-* TailwindCSS Setup
-* Base Folder Structure
+* Frontend Initialization (React, Vite, TailwindCSS, TypeScript, React Router, TanStack Query)
+* Backend Initialization (Express, TypeScript, Prisma 7, PostgreSQL)
+* Database Schema & Migrations (6 models: User, Habit, Task, LearningSession, Resource, XpTransaction)
+* API Foundation (CORS, environment config, health check, error handling)
+* Dashboard API + UI (XP summary, level progress, recent activity, statistics)
+* Habit Module (full CRUD, complete action with streak tracking)
+* Task Module (full CRUD, complete/uncomplete toggle)
+* Learning Session Module (full CRUD, duration tracking)
+* Resource Module (full CRUD, complete/uncomplete toggle, URL links)
+* Global XP System (per-action XP rewards, level calculation, transaction history)
+* Input Validation (Zod schemas on all POST/PATCH endpoints)
+* XP Integrity (atomic transactions, unique constraint on `(userId, reason, reference)`)
+* Database Seed Script
 
 Status:
-Next
+Completed
 
 ---
 
-# Upcoming Tasks
-
-## Backend Initialization
+## Sprint 2 — Authentication
 
 Deliverables:
 
-* Express Setup
-* TypeScript Setup
-* Prisma Setup
-* Environment Configuration
+* Password hashing with bcryptjs
+* JWT token generation and verification
+* Register endpoint
+* Login endpoint
+* Current user endpoint
+* Auth middleware for protected routes
+* Login page
+* Register page
+* Auth context for session management
+* Protected route guards
+* Token persistence in localStorage
+* Automatic token attachment via API interceptor
 
 Status:
-Planned
+Completed
 
 ---
 
-## Database Setup
+## Sprint 3 — Achievement System
 
 Deliverables:
 
-* PostgreSQL Container
-* Prisma Connection
-* Initial Schema
+* Achievement and UserAchievement database models
+* 12 achievement definitions (XP, habits, streaks, tasks, learning)
+* AchievementService with evaluateAchievements() and unlockAchievement()
+* Achievement evaluation integrated into habit, task, learning, and XP flows
+* GET /api/achievements and GET /api/achievements/me endpoints
+* Achievements page with locked/unlocked sections
+* Recent Achievements section on Dashboard
+* Achievement unlock notifications
+* Achievement seed data
 
 Status:
-Planned
+Completed
+
+---
+
+## Sprint 4 — Dashboard Enhancement
+
+Deliverables:
+
+* Weekly XP metric added to dashboard
+* Weekly completed tasks metric added to dashboard
+* Top streak and top 3 habit streaks displayed
+* Achievement progress (unlocked/total + percentage)
+* Hardcoded consistency metric removed
+* Dashboard response enriched with 5 new derived fields
+* No new database tables created
+
+Status:
+Completed
+
+---
+
+## Sprint 5 — Production Hardening
+
+Deliverables:
+
+* Environment variable validation at startup (requireEnv function)
+* helmet security headers middleware
+* express-rate-limit on auth endpoints (20 req/15min per IP)
+* Database connectivity check in GET /api/health
+* 404 catch-all handler for unknown routes
+* Root .gitignore with .env, node_modules, dist
+* .env.example template file
+* prisma and tsx moved from devDependencies to dependencies
+* postinstall script for prisma generate
+* ts-node replaced with tsx for seed scripts
+
+Status:
+Completed
 
 ---
 
@@ -190,29 +238,39 @@ Infrastructure:
 
 # Current Progress
 
-Sprint 0:
+Sprint 0 (Developer Foundation):
 Completed
 
-Sprint 1:
-In Progress
+Sprint 1 (Foundation & Core Modules):
+Completed
+
+Sprint 2 (Authentication):
+Completed
+
+Sprint 3 (Achievement System):
+Completed
+
+Sprint 4 (Dashboard Enhancement):
+Completed
+
+Sprint 5 (Production Hardening):
+Completed
 
 Overall Progress:
-10%
+92%
 
 ---
 
 # Next Immediate Action
 
-Create Frontend Application
+Ready for deployment. Select hosting provider, implement CI/CD, configure DNS, and deploy.
 
-Command:
-
-npm create vite@latest frontend -- --template react-ts
+Note: No deployment provider chosen yet. No CI/CD implemented yet.
 
 ---
 
 # Last Updated
 
-Sprint 1
+Sprint 5 — Production Hardening
 
-Frontend Initialization Phase
+Core Modules Complete — Dashboard, Habits, Tasks, Learning, Resources, XP, Authentication, Achievements. Ready for deployment.

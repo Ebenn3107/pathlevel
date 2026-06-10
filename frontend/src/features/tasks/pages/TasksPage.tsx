@@ -3,6 +3,7 @@ import { Card, Spinner, Button, Modal, ConfirmDialog } from '../../../components
 import { useTasks } from '../hooks/useTasks';
 import { useCreateTask, useUpdateTask, useDeleteTask } from '../hooks/useTaskMutations';
 import { updateTask } from '../api/tasks';
+import { showAchievementNotifications } from '../../achievements/components/AchievementNotification';
 import { useQueryClient } from '@tanstack/react-query';
 import { taskKeys } from '../query-keys';
 import TaskForm from '../components/TaskForm';
@@ -26,8 +27,12 @@ function TaskCard({
   const queryClient = useQueryClient();
 
   const handleToggle = async () => {
-    await updateTask(task.id, { completed: !task.completed });
+    const result = await updateTask(task.id, { completed: !task.completed });
     queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+    if (result.newAchievements && result.newAchievements.length > 0) {
+      showAchievementNotifications(result.newAchievements);
+    }
   };
 
   const isCompleted = task.completed;

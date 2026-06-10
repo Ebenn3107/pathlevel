@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { getTasks, createTask, updateTask, deleteTask } from "../services/taskService";
 import { recordXp, XP_VALUES } from "../services/xpService";
+import { evaluateAchievements } from "../services/achievementService";
 import { getUserId } from "../middlewares/auth";
 
 /** GET /api/tasks */
@@ -29,11 +30,17 @@ export const updateTaskHandler: RequestHandler = async (req, res, next) => {
     const userId = getUserId(req);
     const task = await updateTask(req.params.id as string, userId, req.body);
 
+    let newAchievements: { code: string; title: string; icon: string }[] = [];
     if (req.body.completed === true) {
       await recordXp(userId, XP_VALUES.task_completed, "task_completed", task.id);
+      newAchievements = await evaluateAchievements(userId);
     }
 
-    res.json({ success: true, data: task });
+    const response: Record<string, unknown> = { success: true, data: task };
+    if (newAchievements.length > 0) {
+      response.newAchievements = newAchievements;
+    }
+    res.json(response);
   } catch (err) {
     next(err);
   }

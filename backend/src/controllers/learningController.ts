@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { getSessions, createSession, updateSession, deleteSession } from "../services/learningService";
 import { recordXp, XP_VALUES } from "../services/xpService";
+import { evaluateAchievements } from "../services/achievementService";
 import { getUserId } from "../middlewares/auth";
 
 /** GET /api/learning */
@@ -29,11 +30,17 @@ export const updateSessionHandler: RequestHandler = async (req, res, next) => {
     const userId = getUserId(req);
     const session = await updateSession(req.params.id as string, userId, req.body);
 
+    let newAchievements: { code: string; title: string; icon: string }[] = [];
     if (req.body.endedAt) {
       await recordXp(userId, XP_VALUES.session_completed, "session_completed", session.id);
+      newAchievements = await evaluateAchievements(userId);
     }
 
-    res.json({ success: true, data: session });
+    const response: Record<string, unknown> = { success: true, data: session };
+    if (newAchievements.length > 0) {
+      response.newAchievements = newAchievements;
+    }
+    res.json(response);
   } catch (err) {
     next(err);
   }

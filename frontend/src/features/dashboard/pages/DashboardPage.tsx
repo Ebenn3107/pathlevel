@@ -90,13 +90,12 @@ export default function DashboardPage() {
         <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
           Vital Signs
         </h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-4 sm:grid-cols-2">
           <StatCard
             title="Focus Time"
             value={data ? formatMinutes(data.todayLearningMinutes) : '0m'}
             accent="purple"
           />
-          <StatCard title="Consistency" value="94%" accent="green" />
           <StatCard
             title="Tasks Done"
             value={data?.completedTasks ?? 0}
@@ -202,18 +201,114 @@ export default function DashboardPage() {
         )}
       </Card>
 
-      {/* ── Statistics ─────────────────────────────── */}
+      {/* ── Recent Achievements ────────────────────────── */}
+      <Card>
+        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          Recent Achievements
+        </h2>
+        {data?.recentAchievements && data.recentAchievements.length > 0 ? (
+          <div className="mt-5 space-y-1">
+            {data.recentAchievements.map((achievement) => (
+              <div
+                key={achievement.code}
+                className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
+              >
+                <span className="text-2xl">{achievement.icon}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-medium text-gray-100">{achievement.title}</p>
+                  <p className="text-xs text-muted">{achievement.description}</p>
+                </div>
+                <span className="text-xs text-secondary shrink-0">
+                  {new Date(achievement.unlockedAt).toLocaleDateString()}
+                </span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-10">
+            <div className="text-center">
+              <p className="text-sm text-muted">No achievements yet</p>
+              <p className="mt-1 text-xs text-muted/60">
+                Complete habits, tasks, and learning sessions to unlock achievements.
+              </p>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* ── Weekly Progress ────────────────────────── */}
       <div>
         <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Statistics
+          This Week
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <StatCard
+            title="XP Earned"
+            value={`+${(data?.weeklyXp ?? 0).toLocaleString()} XP`}
+            accent="green"
+            subtitle="This week"
+          />
+          <StatCard
+            title="Tasks Completed"
+            value={data?.weeklyCompletedTasks ?? 0}
+            accent="blue"
+            subtitle="This week"
+          />
+        </div>
+      </div>
+
+      {/* ── Streaks ────────────────────────────────── */}
+      <div>
+        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          Streaks
+        </h2>
+        <div className="grid gap-4 lg:grid-cols-2">
+          <StatCard
+            title="Best Streak"
+            value={data?.topStreak ?? 0}
+            accent="purple"
+            subtitle={data?.topStreak === 1 ? 'day' : 'days'}
+          />
+          <Card>
+            <h3 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+              Top Habits
+            </h3>
+            {data?.topStreakHabits && data.topStreakHabits.length > 0 ? (
+              <div className="mt-3 space-y-2">
+                {data.topStreakHabits.map((h, i) => (
+                  <div
+                    key={h.id}
+                    className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-medium text-muted">#{i + 1}</span>
+                      <span className="text-sm text-gray-100 truncate">{h.title}</span>
+                    </div>
+                    <span className="text-sm font-medium text-secondary">{h.streak} day{h.streak !== 1 ? 's' : ''}</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="mt-6 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-6">
+                <p className="text-sm text-muted/60">No streaks yet</p>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
+
+      {/* ── Achievement Progress ────────────────────── */}
+      <div>
+        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
+          Achievements
         </h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard title="XP" value={data?.xp ?? 0} accent="green" />
-          <StatCard title="Level" value={data?.level ?? 1} accent="purple" />
-          <StatCard title="Habits" value={data?.activeHabits ?? 0} accent="blue" />
-          <StatCard title="Tasks Pending" value={data?.pendingTasks ?? 0} accent="green" />
-          <StatCard title="Tasks Done" value={data?.completedTasks ?? 0} accent="purple" />
-          <StatCard title="Focus Today" value={data ? formatMinutes(data.todayLearningMinutes) : '0m'} accent="blue" />
+          <StatCard
+            title="Progress"
+            value={`${data?.achievementProgress.unlocked ?? 0} / ${data?.achievementProgress.total ?? 0}`}
+            accent="green"
+            subtitle={`${data?.achievementProgress.percentage ?? 0}% complete`}
+          />
         </div>
       </div>
     </div>

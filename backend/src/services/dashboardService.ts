@@ -19,6 +19,27 @@ export interface DashboardSummary {
     reason: string;
     createdAt: Date;
   }[];
+  recentAchievements: {
+    code: string;
+    title: string;
+    description: string;
+    icon: string;
+    unlockedAt: Date;
+  }[];
+  weeklyXp: number;
+  weeklyCompletedTasks: number;
+  topStreak: number;
+  topStreakHabits: {
+    id: string;
+    title: string;
+    streak: number;
+    frequency: string;
+  }[];
+  achievementProgress: {
+    unlocked: number;
+    total: number;
+    percentage: number;
+  };
 }
 
 const REASON_LABELS: Record<string, string> = {
@@ -32,6 +53,12 @@ export async function getDashboard(userId: string): Promise<DashboardSummary> {
   const todayStart = new Date();
   todayStart.setHours(0, 0, 0, 0);
 
+  // Monday of the current week at 00:00:00
+  const startOfWeek = new Date(todayStart);
+  const dayOfWeek = startOfWeek.getDay();
+  const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek; // Monday as start
+  startOfWeek.setDate(startOfWeek.getDate() + diff);
+
   const [
     xpAgg,
     activeHabits,
@@ -39,6 +66,12 @@ export async function getDashboard(userId: string): Promise<DashboardSummary> {
     completedTasks,
     todayAgg,
     recentTx,
+    recentAchievements,
+    weeklyXpAgg,
+    weeklyCompletedTasks,
+    topHabits,
+    totalAchievements,
+    unlockedAchievements,
   ] = await Promise.all([
     prisma.xpTransaction.aggregate({
       where: { userId },
@@ -57,12 +90,38 @@ export async function getDashboard(userId: string): Promise<DashboardSummary> {
       take: 10,
       select: { id: true, amount: true, reason: true, createdAt: true },
     }),
+    prisma.userAchievement.findMany({
+      where: { userId },
+      orderBy: { unlockedAt: "desc" },
+      take: 5,
+      include: {
+        achievement: { select: { code: true, title: true, description: true, icon: true } },
+      },
+    }),
+    prisma.xpTransaction.aggregate({
+      where: { userId, createdAt: { gte: startOfWeek } },
+      _sum: { amount: true },
+    }),
+    prisma.task.count({
+      where: { userId, completed: true, completedAt: { gte: startOfWeek } },
+    }),
+    prisma.habit.findMany({
+      where: { userId },
+      orderBy: { streak: "desc" },
+      take: 3,
+      select: { id: true, title: true, streak: true, frequency: true },
+    }),
+    prisma.achievement.count(),
+    prisma.userAchievement.count({ where: { userId } }),
   ]);
 
   const totalXp = xpAgg._sum.amount ?? 0;
   const level = calculateLevel(totalXp);
   const nextLevelXpVal = xpForLevel(level + 1);
   const currentLevelFloor = xpForLevel(level);
+
+  const totalAchievementsCount = totalAchievements;
+  const unlockedCount = unlockedAchievements;
 
   return {
     xp: totalXp,
@@ -78,5 +137,28 @@ export async function getDashboard(userId: string): Promise<DashboardSummary> {
       ...t,
       reason: REASON_LABELS[t.reason] || t.reason,
     })),
+    recentAchievements: recentAchievements.map((ua) => ({
+      code: ua.achievement.code,
+      title: ua.achievement.title,
+      description: ua.achievement.description,
+      icon: ua.achievement.icon,
+      unlockedAt: ua.unlockedAt,
+    })),
+    weeklyXp: weeklyXpAgg._sum.amount ?? 0,
+    weeklyCompletedTasks,
+    topStreak: topHabits[0]?.streak ?? 0,
+    topStreakHabits: topHabits.map((h) => ({
+      id: h.id,
+      title: h.title,
+      streak: h.streak,
+      frequency: h.frequency,
+    })),
+    achievementProgress: {
+      unlocked: unlockedCount,
+      total: totalAchievementsCount,
+      percentage: totalAchievementsCount > 0
+        ? Math.round((unlockedCount / totalAchievementsCount) * 100)
+        : 0,
+    },
   };
 }

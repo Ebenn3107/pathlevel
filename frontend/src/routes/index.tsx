@@ -8,6 +8,7 @@ import HabitsPage from '../features/habits/pages/HabitsPage';
 import TasksPage from '../features/tasks/pages/TasksPage';
 import LearningPage from '../features/learning/pages/LearningPage';
 import ResourcesPage from '../features/resources/pages/ResourcesPage';
+import AchievementsPage from '../features/achievements/pages/AchievementsPage';
 
 export default function AppRoutes() {
   return (
@@ -43,6 +44,7 @@ export default function AppRoutes() {
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/learning" element={<LearningPage />} />
         <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/achievements" element={<AchievementsPage />} />
       </Route>
 
       {/* Redirects */}

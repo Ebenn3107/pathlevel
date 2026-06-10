@@ -29,10 +29,7 @@ export default function RegisterPage() {
     try {
       await register({ email: email.trim(), username: username.trim(), password });
     } catch (err: unknown) {
-      const message =
-        err && typeof err === 'object' && 'response' in err
-          ? (err as { response: { data: { error?: string } } }).response?.data?.error || 'Registration failed.'
-          : 'Registration failed.';
+      const message = err instanceof Error ? err.message : 'Registration failed.';
       setError(message);
     } finally {
       setIsPending(false);

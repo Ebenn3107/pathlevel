@@ -1,6 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createTask, updateTask, deleteTask } from '../api/tasks';
 import { taskKeys } from '../query-keys';
+import { showAchievementNotifications } from '../../achievements/components/AchievementNotification';
 import type { CreateTaskInput, UpdateTaskInput } from '../types';
 
 export function useCreateTask() {
@@ -19,9 +20,13 @@ export function useUpdateTask(id: string) {
 
   return useMutation({
     mutationFn: (input: UpdateTaskInput) => updateTask(id, input),
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
       queryClient.invalidateQueries({ queryKey: taskKeys.detail(id) });
+
+      if (result.newAchievements && result.newAchievements.length > 0) {
+        showAchievementNotifications(result.newAchievements);
+      }
     },
   });
 }

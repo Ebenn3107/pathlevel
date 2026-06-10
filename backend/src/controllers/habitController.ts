@@ -1,6 +1,6 @@
 import type { RequestHandler } from "express";
 import { getHabits, createHabit, updateHabit, deleteHabit, completeHabit } from "../services/habitService";
-import { recordXp, XP_VALUES } from "../services/xpService";
+import { evaluateAchievements } from "../services/achievementService";
 import { getUserId } from "../middlewares/auth";
 
 /** GET /api/habits */
@@ -36,9 +36,21 @@ export const updateHabitHandler: RequestHandler = async (req, res, next) => {
 /** POST /api/habits/:id/complete */
 export const completeHabitHandler: RequestHandler = async (req, res, next) => {
   try {
-    const habit = await completeHabit(req.params.id as string, getUserId(req));
-    await recordXp(getUserId(req), XP_VALUES.habit_completed, "habit_completed");
-    res.json({ success: true, data: habit });
+    const userId = getUserId(req);
+    const result = await completeHabit(req.params.id as string, userId);
+
+    // Evaluate achievements if this was a new completion
+    let newAchievements: { code: string; title: string; icon: string }[] = [];
+    if (result.isNew) {
+      newAchievements = await evaluateAchievements(userId);
+    }
+
+    // 201 Created for new completions, 200 OK for duplicates
+    const response: Record<string, unknown> = { success: true, data: result.habit };
+    if (newAchievements.length > 0) {
+      response.newAchievements = newAchievements;
+    }
+    res.status(result.isNew ? 201 : 200).json(response);
   } catch (err) {
     next(err);
   }

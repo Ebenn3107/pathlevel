@@ -26,7 +26,16 @@ export async function deleteHabit(id: string): Promise<void> {
   await api.delete(`/habits/${id}`);
 }
 
-export async function completeHabit(id: string): Promise<Habit> {
-  const { data } = await api.post<ApiResponse<Habit>>(`/habits/${id}/complete`);
-  return data.data;
+export interface CompleteHabitResult {
+  habit: Habit;
+  newAchievements?: { code: string; title: string; icon: string }[];
+}
+
+export async function completeHabit(id: string): Promise<CompleteHabitResult> {
+  const response = await api.post(`/habits/${id}/complete`);
+  const body = response.data;
+  return {
+    habit: body.data as Habit,
+    newAchievements: body.newAchievements as { code: string; title: string; icon: string }[] | undefined,
+  };
 }

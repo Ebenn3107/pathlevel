@@ -25,6 +25,8 @@ model User {
   learningSessions LearningSession[]
   resources        Resource[]
   xpTransactions   XpTransaction[]
+  completions        HabitCompletion[]
+  userAchievements   UserAchievement[]
 
   @@map("users")
 }
@@ -43,7 +45,24 @@ model Habit {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  completions HabitCompletion[]
+
   @@map("habits")
+}
+
+/* ── HabitCompletion ──────────────────────────────────── */
+model HabitCompletion {
+  id          String   @id @default(uuid())
+  userId      String   @map("user_id")
+  habitId     String   @map("habit_id")
+  periodKey   String   @map("period_key") // "2026-06-08" (daily), Monday date (weekly), "2026-06-01" (monthly)
+  completedAt DateTime @default(now()) @map("completed_at")
+
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+
+  @@unique([habitId, userId, periodKey])
+  @@map("habit_completions")
 }
 
 /* ── Task ──────────────────────────────────────────────── */
@@ -111,4 +130,32 @@ model XpTransaction {
 
   @@unique([userId, reason, reference])
   @@map("xp_transactions")
+}
+
+/* ── Achievement ─────────────────────────────────── */
+model Achievement {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  title       String
+  description String
+  icon        String
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  userAchievements UserAchievement[]
+
+  @@map("achievements")
+}
+
+/* ── UserAchievement ──────────────────────────────── */
+model UserAchievement {
+  id            String   @id @default(uuid())
+  userId        String   @map("user_id")
+  achievementId String   @map("achievement_id")
+  unlockedAt    DateTime @default(now()) @map("unlocked_at")
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
 }
