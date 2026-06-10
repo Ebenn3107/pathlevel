@@ -19,10 +19,10 @@ Active Development
 # Current Phase
 
 Phase:
-Core Feature Buildout
+V1 Complete — Ready for Deployment
 
 Current Sprint:
-Sprint 5
+Sprint 6
 
 Sprint Status:
 Completed
@@ -31,9 +31,9 @@ Completed
 
 # Current Objective
 
-Sprint 5 — Production Hardening completed.
+Sprint 6 — Deployment Infrastructure completed.
 
-Environment variable validation, helmet security headers, rate limiting on auth routes, database health check, 404 handler, root .gitignore, and dependency cleanup. Ready for deployment provider selection.
+Production Docker infrastructure created: multi-stage backend Dockerfile, frontend Dockerfile with nginx serving, nginx reverse proxy with SPA routing and API proxying, and production docker-compose.yml with all services. Environment variables fully configurable. No hardcoded secrets.
 
 ---
 
@@ -197,6 +197,24 @@ Completed
 
 ---
 
+## Sprint 6 — Deployment Infrastructure
+
+Deliverables:
+
+* Multi-stage backend Dockerfile (build + runtime)
+* Frontend Dockerfile (Vite build + nginx serving)
+* Nginx configuration with SPA routing and API proxying
+* Production docker-compose.yml with postgres, backend, frontend, nginx
+* .dockerignore files for efficient builds
+* Environment variable validation at compose level (?:error syntax)
+* Health checks on all services
+* No hardcoded secrets — everything via environment
+
+Status:
+Completed
+
+---
+
 # Technical Stack
 
 Frontend:
@@ -214,6 +232,12 @@ Backend:
 * Express
 * Prisma ORM
 * PostgreSQL
+
+Infrastructure:
+
+* Docker Compose
+* Nginx
+* Docker Multi-stage Builds
 
 Infrastructure:
 
@@ -256,21 +280,23 @@ Completed
 Sprint 5 (Production Hardening):
 Completed
 
+Sprint 6 (Deployment Infrastructure):
+Completed
+
 Overall Progress:
-92%
+96%
 
 ---
 
 # Next Immediate Action
 
-Ready for deployment. Select hosting provider, implement CI/CD, configure DNS, and deploy.
-
-Note: No deployment provider chosen yet. No CI/CD implemented yet.
+Deploy to production. Select hosting provider, configure DNS, and run:
+docker compose -f docker-compose.prod.yml up -d
 
 ---
 
 # Last Updated
 
-Sprint 5 — Production Hardening
+Sprint 6 — Deployment Infrastructure
 
-Core Modules Complete — Dashboard, Habits, Tasks, Learning, Resources, XP, Authentication, Achievements. Ready for deployment.
+V1 Complete — PathLevel is ready for production deployment.
