@@ -5,6 +5,7 @@ import { getUserId } from "../middlewares/auth";
 /** GET /api/achievements */
 export const listAchievements: RequestHandler = async (_req, res, next) => {
   try {
+    // Backed by the database (runtime source of truth), not the code constant.
     const achievements = await getAllAchievements();
     res.json({ success: true, data: achievements });
   } catch (err) {

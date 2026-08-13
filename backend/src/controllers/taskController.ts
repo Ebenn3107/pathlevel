@@ -1,7 +1,5 @@
 import type { RequestHandler } from "express";
 import { getTasks, createTask, updateTask, deleteTask } from "../services/taskService";
-import { recordXp, XP_VALUES } from "../services/xpService";
-import { evaluateAchievements } from "../services/achievementService";
 import { getUserId } from "../middlewares/auth";
 
 /** GET /api/tasks */
@@ -28,17 +26,12 @@ export const createTaskHandler: RequestHandler = async (req, res, next) => {
 export const updateTaskHandler: RequestHandler = async (req, res, next) => {
   try {
     const userId = getUserId(req);
-    const task = await updateTask(req.params.id as string, userId, req.body);
+    // XP award + achievement evaluation happen atomically inside updateTask
+    const result = await updateTask(req.params.id as string, userId, req.body);
 
-    let newAchievements: { code: string; title: string; icon: string }[] = [];
-    if (req.body.completed === true) {
-      await recordXp(userId, XP_VALUES.task_completed, "task_completed", task.id);
-      newAchievements = await evaluateAchievements(userId);
-    }
-
-    const response: Record<string, unknown> = { success: true, data: task };
-    if (newAchievements.length > 0) {
-      response.newAchievements = newAchievements;
+    const response: Record<string, unknown> = { success: true, data: result.task };
+    if (result.newAchievements && result.newAchievements.length > 0) {
+      response.newAchievements = result.newAchievements;
     }
     res.json(response);
   } catch (err) {

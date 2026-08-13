@@ -20,6 +20,7 @@ export default function LearningForm({
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [notes, setNotes] = useState(initialValues?.notes ?? '');
   const [duration, setDuration] = useState(initialValues?.duration ?? 30);
+  const [startedAt, setStartedAt] = useState(initialValues?.startedAt?.slice(0, 10) ?? '');
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -28,6 +29,8 @@ export default function LearningForm({
       title: title.trim(),
       notes: notes.trim() || undefined,
       duration,
+      // Retrospective date support (optional)
+      startedAt: startedAt ? new Date(`${startedAt}T00:00:00`).toISOString() : undefined,
     });
   };
 
@@ -53,14 +56,22 @@ export default function LearningForm({
         />
       </div>
 
-      <Input
-        label="Duration (minutes)"
-        type="number"
-        min={1}
-        max={1440}
-        value={duration}
-        onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
-      />
+      <div className="grid grid-cols-2 gap-3">
+        <Input
+          label="Duration (minutes)"
+          type="number"
+          min={1}
+          max={1440}
+          value={duration}
+          onChange={(e) => setDuration(Math.max(1, parseInt(e.target.value) || 1))}
+        />
+        <Input
+          label="Date (optional)"
+          type="date"
+          value={startedAt}
+          onChange={(e) => setStartedAt(e.target.value)}
+        />
+      </div>
 
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="ghost" type="button" onClick={onCancel} disabled={isLoading}>

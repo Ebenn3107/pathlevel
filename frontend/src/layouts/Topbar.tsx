@@ -1,8 +1,23 @@
+import { useState, type FormEvent } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+
 export default function Topbar() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const [value, setValue] = useState(searchParams.get('q') ?? '');
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const q = value.trim();
+    if (q) {
+      navigate(`/search?q=${encodeURIComponent(q)}`);
+    }
+  };
+
   return (
     <header className="flex h-16 items-center gap-4 border-b border-border bg-surface px-6">
       {/* Search */}
-      <div className="relative flex-1 max-w-md">
+      <form onSubmit={handleSubmit} className="relative flex-1 max-w-md">
         <svg
           className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted"
           fill="none"
@@ -13,14 +28,17 @@ export default function Topbar() {
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
         <input
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           className="w-full rounded-lg border border-border bg-container py-2 pl-10 pr-3 text-sm text-white placeholder-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary"
           placeholder="Search..."
           type="search"
+          aria-label="Search your Library"
         />
-      </div>
+      </form>
 
       {/* Right actions */}
-      <div className="flex items-center gap-2">
+      <div className="ml-auto flex items-center gap-2">
         {/* Notifications */}
         <button
           className="relative rounded-lg p-2 text-muted transition-colors hover:bg-container hover:text-white"

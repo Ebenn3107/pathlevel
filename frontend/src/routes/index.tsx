@@ -7,7 +7,10 @@ import DashboardPage from '../features/dashboard/pages/DashboardPage';
 import HabitsPage from '../features/habits/pages/HabitsPage';
 import TasksPage from '../features/tasks/pages/TasksPage';
 import LearningPage from '../features/learning/pages/LearningPage';
-import ResourcesPage from '../features/resources/pages/ResourcesPage';
+import GoalDetailPage from '../features/learning/pages/GoalDetailPage';
+import UnitDetailPage from '../features/learning/pages/UnitDetailPage';
+import LibraryPage from '../features/resources/pages/LibraryPage';
+import SearchPage from '../features/search/pages/SearchPage';
 import AchievementsPage from '../features/achievements/pages/AchievementsPage';
 
 export default function AppRoutes() {
@@ -43,7 +46,11 @@ export default function AppRoutes() {
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/tasks" element={<TasksPage />} />
         <Route path="/learning" element={<LearningPage />} />
-        <Route path="/resources" element={<ResourcesPage />} />
+        <Route path="/learning/goals/:goalId" element={<GoalDetailPage />} />
+        <Route path="/learning/units/:unitId" element={<UnitDetailPage />} />
+        <Route path="/library" element={<LibraryPage />} />
+        <Route path="/resources" element={<LibraryPage />} />
+        <Route path="/search" element={<SearchPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
       </Route>
 

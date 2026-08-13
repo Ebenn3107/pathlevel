@@ -6,3 +6,4 @@ export { default as StatCard } from './StatCard';
 export { default as ProgressBar } from './ProgressBar';
 export { default as Modal } from './Modal';
 export { default as ConfirmDialog } from './ConfirmDialog';
+export { default as Badge } from './Badge';

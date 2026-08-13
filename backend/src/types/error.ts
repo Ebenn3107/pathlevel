@@ -24,3 +24,12 @@ export class ForbiddenError extends Error {
     this.name = "ForbiddenError";
   }
 }
+
+export class ValidationError extends Error {
+  statusCode = 400;
+
+  constructor(message = "Invalid request") {
+    super(message);
+    this.name = "ValidationError";
+  }
+}

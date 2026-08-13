@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "../config/database";
 
 const XP_PER_LEVEL = 100;
@@ -30,28 +31,36 @@ export function xpForLevel(level: number): number {
   return Math.max(0, (level - 1) * XP_PER_LEVEL);
 }
 
-/** Record an XP transaction and update the user aggregate atomically. */
+/**
+ * Record an XP transaction and update the user aggregate.
+ *
+ * When no `client` is provided this runs atomically in its own transaction.
+ * When called from inside an existing transaction, pass that transaction
+ * client so the XP award participates in the surrounding unit of work
+ * (see task/session/habit completion).
+ */
 export async function recordXp(
   userId: string,
   amount: number,
   reason: string,
   reference?: string,
+  client?: Prisma.TransactionClient,
 ) {
-  return prisma.$transaction(async (tx) => {
+  const run = async (db: Prisma.TransactionClient) => {
     // Idempotency: skip if a transaction already exists for (reason, reference)
     if (reference) {
-      const existing = await tx.xpTransaction.findFirst({
+      const existing = await db.xpTransaction.findFirst({
         where: { userId, reason, reference },
       });
       if (existing) return existing;
     }
 
-    const transaction = await tx.xpTransaction.create({
+    const transaction = await db.xpTransaction.create({
       data: { userId, amount, reason, reference: reference ?? null },
     });
 
     // Recalculate total XP from all transactions
-    const aggregate = await tx.xpTransaction.aggregate({
+    const aggregate = await db.xpTransaction.aggregate({
       where: { userId },
       _sum: { amount: true },
     });
@@ -59,7 +68,7 @@ export async function recordXp(
     const level = calculateLevel(totalXp);
 
     // Update user aggregate (best-effort — user may not exist yet)
-    await tx.user.update({
+    await db.user.update({
       where: { id: userId },
       data: { xp: totalXp, level },
     }).catch((err) => {
@@ -67,7 +76,12 @@ export async function recordXp(
     });
 
     return transaction;
-  });
+  };
+
+  if (client) {
+    return run(client);
+  }
+  return prisma.$transaction(run);
 }
 
 /** Get XP summary for a user. */

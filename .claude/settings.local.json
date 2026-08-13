@@ -30,6 +30,8 @@
     ]
   },
   "enabledMcpjsonServers": [
-    "tasks"
+    "tasks",
+    "stitch",
+    "linear-mcp"
   ]
 }

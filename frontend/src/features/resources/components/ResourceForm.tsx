@@ -20,14 +20,20 @@ export default function ResourceForm({
   const [title, setTitle] = useState(initialValues?.title ?? '');
   const [url, setUrl] = useState(initialValues?.url ?? '');
   const [description, setDescription] = useState(initialValues?.description ?? '');
+  const [tags, setTags] = useState(initialValues?.tags?.join(', ') ?? '');
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!title.trim()) return;
+    const parsedTags = tags
+      .split(',')
+      .map((t) => t.trim())
+      .filter(Boolean);
     onSubmit({
       title: title.trim(),
       url: url.trim() || undefined,
       description: description.trim() || undefined,
+      tags: parsedTags.length > 0 ? parsedTags : undefined,
     });
   };
 
@@ -60,6 +66,13 @@ export default function ResourceForm({
           className="rounded-lg border border-border bg-container px-3 py-2 text-sm text-white placeholder-muted transition-colors focus:border-primary focus:outline-none focus:ring-1 focus:ring-primary resize-none"
         />
       </div>
+
+      <Input
+        label="Tags (comma-separated)"
+        placeholder="Docker, Linux, Containers"
+        value={tags}
+        onChange={(e) => setTags(e.target.value)}
+      />
 
       <div className="flex justify-end gap-3 pt-2">
         <Button variant="ghost" type="button" onClick={onCancel} disabled={isLoading}>

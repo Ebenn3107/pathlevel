@@ -211,3 +211,14 @@ Last Updated:
 
 Sprint 1
 Foundation Documentation Phase
+
+Decision: Never modify applied Prisma migration files.
+
+Reason:
+Prisma stores checksums in _prisma_migrations.
+Editing applied migrations causes drift detection and may force database reset.
+
+Rule:
+After migration is applied:
+- migration.sql becomes immutable
+- future changes require new migration files

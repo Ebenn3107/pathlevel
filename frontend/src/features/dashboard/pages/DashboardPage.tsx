@@ -1,5 +1,13 @@
-import { StatCard, Card, Spinner } from '../../../components/ui';
+import { Link } from 'react-router-dom';
+import { Card, Spinner, Badge } from '../../../components/ui';
 import { useDashboard } from '../hooks/useDashboard';
+import { useGoals } from '../../learning/hooks/useLearningGoals';
+import { useSessions } from '../../learning/hooks/useSessions';
+import { useResources } from '../../resources/hooks/useResources';
+import { useTasks } from '../../tasks/hooks/useTasks';
+import { useHabits } from '../../habits/hooks/useHabits';
+import { useMyAchievements } from '../../achievements/hooks/useAchievements';
+import type { ResourceProgress } from '../../resources/types';
 
 function formatMinutes(minutes: number): string {
   if (minutes >= 60) {
@@ -13,7 +21,7 @@ function formatMinutes(minutes: number): string {
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return 'Just now';
+  if (mins < 1) return 'just now';
   if (mins < 60) return `${mins}m ago`;
   const hours = Math.floor(mins / 60);
   if (hours < 24) return `${hours}h ago`;
@@ -21,296 +29,257 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`;
 }
 
+const PROGRESS_BADGE: Record<ResourceProgress, 'secondary' | 'tertiary' | 'muted'> = {
+  NOT_STARTED: 'muted',
+  IN_PROGRESS: 'tertiary',
+  COMPLETED: 'secondary',
+};
+
+/**
+ * Home — knowledge-first dashboard.
+ *
+ * Priority (approved):
+ *   1. Continue Learning / Current Focus
+ *   2. Relevant Knowledge / Resurfacing (deterministic, non-AI)
+ *   3. Recent Learning Activity
+ *   4. Tasks / Habits
+ *   5. Achievements / XP
+ *
+ * All sections are composed from existing real APIs via TanStack Query. Errors
+ * are contained per-section so one failure never collapses the whole page.
+ */
 export default function DashboardPage() {
-  const { data, isLoading, isError, error } = useDashboard();
+  const { data: dash } = useDashboard();
+  const { data: goals } = useGoals();
+  const { data: sessions } = useSessions();
+  const { data: resources } = useResources();
+  const { data: tasks } = useTasks();
+  const { data: habits } = useHabits();
+  const { data: achievements } = useMyAchievements();
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-32">
-        <Spinner size="lg" />
-      </div>
-    );
-  }
+  /* ── Section 1: Continue Learning / Current Focus ────────────── */
+  // Most advanced goal (by derived progress) with at least one unit.
+  const activeGoal = goals
+    ?.filter((g) => g.totalUnits > 0)
+    .sort((a, b) => b.progressPercentage - a.progressPercentage)[0];
 
-  if (isError) {
-    return (
-      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-6 text-center">
-        <p className="text-red-400 text-sm">
-          {error instanceof Error ? error.message : 'Failed to load dashboard data.'}
-        </p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6">
-      {/* ── Hero ────────────────────────────────────── */}
-      <div className="rounded-lg border border-border bg-container p-6">
-        <div className="flex items-baseline justify-between">
-          <div>
-            <p className="text-xs font-medium tracking-[0.2em] text-muted uppercase">
-              Level {data?.level ?? 1}
-            </p>
-            <p className="mt-2 text-6xl font-bold text-white tracking-tight">
-              {data ? `${data.xp.toLocaleString()} XP` : '0 XP'}
-            </p>
-            <p className="mt-1 text-sm text-muted">
-              {data && data.xpRemaining > 0
-                ? `${data.xpRemaining} XP to reach Level ${data.level + 1}`
-                : data && data.level >= 1
-                  ? 'Maximum level reached!'
-                  : 'Complete habits and tasks to earn XP and level up.'}
+  const continueLearning = (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Continue Learning
+      </h2>
+      {!activeGoal ? (
+        <Card>
+          <div className="py-6 text-center">
+            <p className="text-sm text-gray-300">No active learning</p>
+            <p className="mt-1 text-xs text-muted">
+              <Link to="/learning" className="text-primary hover:underline">
+                Start a Learning Goal
+              </Link>{' '}
+              to track your progress.
             </p>
           </div>
-          {data && (
-            <div className="text-right">
-              <p className="text-3xl font-bold text-white">{data.level}</p>
-              <p className="text-xs text-muted">Current Level</p>
+        </Card>
+      ) : (
+        <Link to="/learning">
+          <Card className="hover:border-primary/40">
+            <div className="flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-base font-semibold text-gray-100">{activeGoal.title}</span>
+                  <Badge variant="primary">
+                    {activeGoal.completedUnits} / {activeGoal.totalUnits} units
+                  </Badge>
+                </div>
+                <div className="mt-3 h-2 w-full max-w-md overflow-hidden rounded-full bg-border">
+                  <div
+                    className="h-full rounded-full bg-primary transition-all duration-500"
+                    style={{ width: `${activeGoal.progressPercentage}%` }}
+                  />
+                </div>
+                <p className="mt-1 text-xs text-muted">{activeGoal.progressPercentage}% complete</p>
+              </div>
+            </div>
+          </Card>
+        </Link>
+      )}
+    </section>
+  );
+
+  /* ── Section 2: Relevant Knowledge (deterministic) ───────────── */
+  // Recently updated Resources (non-AI resurfacing baseline).
+  const recentResources = resources?.slice(0, 3) ?? [];
+
+  const relevantKnowledge = (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Recently Saved
+      </h2>
+      {recentResources.length === 0 ? (
+        <Card>
+          <div className="py-6 text-center">
+            <p className="text-sm text-gray-300">No saved knowledge yet</p>
+            <p className="mt-1 text-xs text-muted">
+              <Link to="/library" className="text-primary hover:underline">
+                Capture
+              </Link>{' '}
+              articles and links to build your Library.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="flex flex-col gap-2">
+          {recentResources.map((resource) => (
+            <Link key={resource.id} to="/library">
+              <Card className="p-4 hover:border-primary/40">
+                <div className="flex items-center gap-2">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-100">
+                    {resource.title}
+                  </span>
+                  <Badge variant={PROGRESS_BADGE[resource.progress]}>
+                    {resource.progress.replace('_', ' ')}
+                  </Badge>
+                </div>
+                {resource.url && (
+                  <p className="mt-0.5 truncate text-xs text-muted">{resource.url}</p>
+                )}
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  /* ── Section 3: Recent Learning Activity ──────────────────────── */
+  const recentSessions = sessions?.slice(0, 3) ?? [];
+
+  const recentActivity = (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Recent Learning Activity
+      </h2>
+      {recentSessions.length === 0 ? (
+        <Card>
+          <div className="py-6 text-center">
+            <p className="text-sm text-gray-300">No recent learning activity</p>
+            <p className="mt-1 text-xs text-muted">
+              Log a session from{' '}
+              <Link to="/learning" className="text-primary hover:underline">
+                Learning
+              </Link>{' '}
+              to see it here.
+            </p>
+          </div>
+        </Card>
+      ) : (
+        <div className="space-y-2">
+          {recentSessions.map((session) => (
+            <Link key={session.id} to="/learning">
+              <Card className="p-4 hover:border-primary/40">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-gray-100">
+                    {session.title}
+                  </span>
+                  <span className="shrink-0 text-xs text-muted">
+                    {timeAgo(session.startedAt)} · {formatMinutes(session.duration)}
+                  </span>
+                </div>
+                {session.notes && (
+                  <p className="mt-0.5 line-clamp-1 text-xs text-muted">{session.notes}</p>
+                )}
+              </Card>
+            </Link>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+
+  /* ── Section 4: Tasks / Habits (supporting) ──────────────────── */
+  const pendingTasks = tasks?.filter((t) => !t.completed).length ?? 0;
+  const activeHabits = habits?.length ?? 0;
+
+  const supporting = (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Today
+      </h2>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <Link to="/tasks">
+          <Card className="hover:border-tertiary/40">
+            <p className="text-sm text-muted">Pending tasks</p>
+            <p className="mt-1 text-2xl font-bold text-white">{pendingTasks}</p>
+          </Card>
+        </Link>
+        <Link to="/habits">
+          <Card className="hover:border-secondary/40">
+            <p className="text-sm text-muted">Active habits</p>
+            <p className="mt-1 text-2xl font-bold text-white">{activeHabits}</p>
+          </Card>
+        </Link>
+      </div>
+    </section>
+  );
+
+  /* ── Section 5: Achievements / XP (supporting) ───────────────── */
+  const unlockedCount = achievements?.filter((a) => a.unlocked).length ?? 0;
+  const recentAchievement = achievements?.find((a) => a.unlocked);
+
+  const gamification = (
+    <section>
+      <h2 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-muted">
+        Achievements
+      </h2>
+      <Card>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-muted">
+              Level {dash?.level ?? 1} · {dash?.xp.toLocaleString() ?? 0} XP
+            </p>
+            <p className="mt-1 text-xs text-muted">
+              {unlockedCount} achievement{unlockedCount !== 1 ? 's' : ''} unlocked
+            </p>
+          </div>
+          {recentAchievement && (
+            <div className="flex items-center gap-2 text-right">
+              <span className="text-2xl">{recentAchievement.icon}</span>
+              <div>
+                <p className="text-xs font-medium text-gray-100">{recentAchievement.title}</p>
+                <p className="text-[10px] text-muted">recent</p>
+              </div>
             </div>
           )}
         </div>
-        <div className="mt-6 max-w-md">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-xs text-muted">Level Progress</span>
-            <span className="text-xs text-muted">
-              {data?.levelProgress ?? 0} / 100 XP
-            </span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-border">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500"
-              style={{ width: `${Math.min(100, ((data?.levelProgress ?? 0) / 100) * 100)}%` }}
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* ── Vital Signs ────────────────────────────── */}
-      <Card>
-        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Vital Signs
-        </h2>
-        <div className="mt-5 grid gap-4 sm:grid-cols-2">
-          <StatCard
-            title="Focus Time"
-            value={data ? formatMinutes(data.todayLearningMinutes) : '0m'}
-            accent="purple"
-          />
-          <StatCard
-            title="Tasks Done"
-            value={data?.completedTasks ?? 0}
-            accent="blue"
-          />
-        </div>
       </Card>
+    </section>
+  );
 
-      {/* ── Quick Stats / Learning Activity ────────── */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-            Today's Learning
-          </h2>
-          <div className="mt-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Time spent</span>
-              <span className="text-lg font-semibold text-white">
-                {data ? formatMinutes(data.todayLearningMinutes) : '0m'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Active habits</span>
-              <span className="text-lg font-semibold text-white">{data?.activeHabits ?? 0}</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted">Pending tasks</span>
-              <span className="text-lg font-semibold text-white">{data?.pendingTasks ?? 0}</span>
-            </div>
-          </div>
-        </Card>
-
-        <Card>
-          <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-            Quick Actions
-          </h2>
-          <div className="mt-5 space-y-4">
-            <a
-              href="/habits"
-              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
-            >
-              <div className="h-2 w-2 rounded-full bg-secondary" />
-              Track a new habit
-            </a>
-            <a
-              href="/tasks"
-              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
-            >
-              <div className="h-2 w-2 rounded-full bg-tertiary" />
-              {data?.pendingTasks && data.pendingTasks > 0
-                ? `${data.pendingTasks} pending task${data.pendingTasks !== 1 ? 's' : ''}`
-                : 'Create a new task'}
-            </a>
-            <a
-              href="/learning"
-              className="flex items-center gap-3 rounded-lg border border-border bg-container/50 px-4 py-3 text-sm text-muted transition-colors hover:border-primary/40 hover:text-white"
-            >
-              <div className="h-2 w-2 rounded-full bg-primary" />
-              Start a learning session
-            </a>
-          </div>
-        </Card>
+  return (
+    <div className="space-y-8">
+      <div>
+        <h1 className="text-2xl font-bold text-gray-100">Home</h1>
+        <p className="mt-1 text-sm text-muted">Continue where you left off.</p>
       </div>
 
-      {/* ── XP Growth ──────────────────────────────── */}
-      <Card>
-        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Recent XP Activity
-        </h2>
-        {data?.recentActivity && data.recentActivity.length > 0 ? (
-          <div className="mt-5 space-y-1">
-            {data.recentActivity.map((entry) => (
-              <div
-                key={entry.id}
-                className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className={`h-2 w-2 rounded-full ${
-                      entry.amount > 0 ? 'bg-secondary' : 'bg-red-400'
-                    }`}
-                  />
-                  <span className="text-sm text-muted">{entry.reason}</span>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span className={`text-sm font-medium ${entry.amount > 0 ? 'text-secondary' : 'text-red-400'}`}>
-                    {entry.amount > 0 ? '+' : ''}{entry.amount} XP
-                  </span>
-                  <span className="text-xs text-muted">{timeAgo(entry.createdAt)}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-10">
-            <div className="text-center">
-              <p className="text-sm text-muted">No activity yet</p>
-              <p className="mt-1 text-xs text-muted/60">
-                Complete habits, tasks, and learning sessions to earn XP.
-              </p>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* ── Recent Achievements ────────────────────────── */}
-      <Card>
-        <h2 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Recent Achievements
-        </h2>
-        {data?.recentAchievements && data.recentAchievements.length > 0 ? (
-          <div className="mt-5 space-y-1">
-            {data.recentAchievements.map((achievement) => (
-              <div
-                key={achievement.code}
-                className="flex items-center gap-3 rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
-              >
-                <span className="text-2xl">{achievement.icon}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-gray-100">{achievement.title}</p>
-                  <p className="text-xs text-muted">{achievement.description}</p>
-                </div>
-                <span className="text-xs text-secondary shrink-0">
-                  {new Date(achievement.unlockedAt).toLocaleDateString()}
-                </span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-10">
-            <div className="text-center">
-              <p className="text-sm text-muted">No achievements yet</p>
-              <p className="mt-1 text-xs text-muted/60">
-                Complete habits, tasks, and learning sessions to unlock achievements.
-              </p>
-            </div>
-          </div>
-        )}
-      </Card>
-
-      {/* ── Weekly Progress ────────────────────────── */}
-      <div>
-        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          This Week
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          <StatCard
-            title="XP Earned"
-            value={`+${(data?.weeklyXp ?? 0).toLocaleString()} XP`}
-            accent="green"
-            subtitle="This week"
-          />
-          <StatCard
-            title="Tasks Completed"
-            value={data?.weeklyCompletedTasks ?? 0}
-            accent="blue"
-            subtitle="This week"
-          />
+      {/* Main content (left) + secondary (right), mirroring Stitch */}
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="space-y-8 lg:col-span-2">
+          {continueLearning}
+          {recentActivity}
+        </div>
+        <div className="space-y-8">
+          {relevantKnowledge}
+          {supporting}
+          {gamification}
         </div>
       </div>
 
-      {/* ── Streaks ────────────────────────────────── */}
-      <div>
-        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Streaks
-        </h2>
-        <div className="grid gap-4 lg:grid-cols-2">
-          <StatCard
-            title="Best Streak"
-            value={data?.topStreak ?? 0}
-            accent="purple"
-            subtitle={data?.topStreak === 1 ? 'day' : 'days'}
-          />
-          <Card>
-            <h3 className="text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-              Top Habits
-            </h3>
-            {data?.topStreakHabits && data.topStreakHabits.length > 0 ? (
-              <div className="mt-3 space-y-2">
-                {data.topStreakHabits.map((h, i) => (
-                  <div
-                    key={h.id}
-                    className="flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-container/50"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium text-muted">#{i + 1}</span>
-                      <span className="text-sm text-gray-100 truncate">{h.title}</span>
-                    </div>
-                    <span className="text-sm font-medium text-secondary">{h.streak} day{h.streak !== 1 ? 's' : ''}</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="mt-6 flex items-center justify-center rounded-lg border border-dashed border-muted/30 py-6">
-                <p className="text-sm text-muted/60">No streaks yet</p>
-              </div>
-            )}
-          </Card>
+      {!dash && !goals && !sessions && !resources && !tasks && !habits && !achievements && (
+        <div className="flex items-center justify-center py-16">
+          <Spinner size="lg" />
         </div>
-      </div>
-
-      {/* ── Achievement Progress ────────────────────── */}
-      <div>
-        <h2 className="mb-4 text-xs font-semibold tracking-[0.2em] text-muted uppercase">
-          Achievements
-        </h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <StatCard
-            title="Progress"
-            value={`${data?.achievementProgress.unlocked ?? 0} / ${data?.achievementProgress.total ?? 0}`}
-            accent="green"
-            subtitle={`${data?.achievementProgress.percentage ?? 0}% complete`}
-          />
-        </div>
-      </div>
+      )}
     </div>
   );
 }

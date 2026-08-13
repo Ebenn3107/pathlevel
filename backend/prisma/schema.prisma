@@ -27,6 +27,12 @@ model User {
   xpTransactions   XpTransaction[]
   completions        HabitCompletion[]
   userAchievements   UserAchievement[]
+  learningGoals        LearningGoal[]
+  learningUnits        LearningUnit[]
+  resourceLearningUnits ResourceLearningUnit[]
+  resourceLearningGoals ResourceLearningGoal[]
+  learningSummaries      LearningSummary[]
+  sessionResources       SessionResource[]
 
   @@map("users")
 }
@@ -85,36 +91,187 @@ model Task {
 
 /* ── LearningSession ──────────────────────────────────── */
 model LearningSession {
-  id        String   @id @default(uuid())
-  userId    String   @map("user_id")
-  title     String
-  notes     String?
-  duration  Int      // duration in minutes
-  startedAt DateTime @map("started_at")
-  endedAt   DateTime? @map("ended_at")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              String    @id @default(uuid())
+  userId          String    @map("user_id")
+  title           String
+  // Deprecated legacy field — retained for compatibility; content is being
+  // migrated into LearningSummary (Slice 4). See learning_summaries.
+  notes           String?
+  duration        Int       // duration in minutes
+  startedAt       DateTime  @map("started_at")
+  endedAt         DateTime? @map("ended_at")
+  learningUnitId  String?   @map("learning_unit_id")
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  unit LearningUnit? @relation(fields: [learningUnitId], references: [id], onDelete: SetNull)
+
+  resources SessionResource[]
+  summary  LearningSummary?
 
   @@map("learning_sessions")
 }
 
+/* ── Learning Summary ─────────────────────────────────── */
+model LearningSummary {
+  id        String   @id @default(uuid())
+  userId    String   @map("user_id")
+  sessionId String   @unique @map("session_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  session LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+
+  @@map("learning_summaries")
+}
+
+/* ── Session ↔ Resource (M:N junction) ───────────────── */
+model SessionResource {
+  id         String   @id @default(uuid())
+  sessionId  String   @map("session_id")
+  resourceId String   @map("resource_id")
+  userId     String   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  session  LearningSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  resource Resource        @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  user     User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([sessionId, resourceId])
+  @@map("session_resources")
+}
+
+/* ── Library Status / Resource Progress enums ───────── */
+enum ResourceLibraryStatus {
+  INBOX
+  SAVED
+  ARCHIVED
+}
+
+enum ResourceProgress {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/* ── Resource source-type (deterministic, non-AI) ─── */
+enum ResourceSourceType {
+  ARTICLE
+  VIDEO
+  DOCUMENT
+  WEBSITE
+  OTHER
+}
+
 /* ── Resource ─────────────────────────────────────────── */
 model Resource {
-  id          String   @id @default(uuid())
-  userId      String   @map("user_id")
-  title       String
-  url         String?
-  description String?
-  tags        String[] @default([])
-  completed   Boolean  @default(false)
-  createdAt   DateTime @default(now()) @map("created_at")
-  updatedAt   DateTime @updatedAt @map("updated_at")
+  id            String                @id @default(uuid())
+  userId        String                @map("user_id")
+  title         String
+  url           String?
+  description   String?
+  tags          String[]              @default([])
+  libraryStatus ResourceLibraryStatus @default(INBOX) @map("library_status")
+  progress      ResourceProgress      @default(NOT_STARTED)
+  // Deterministic metadata enrichment (Micro-Slice B) — nullable, optional.
+  thumbnailUrl  String?               @map("thumbnail_url")
+  siteName      String?               @map("site_name")
+  sourceType    ResourceSourceType?   @map("source_type")
+  // Deprecated legacy field. Retained temporarily for API/frontend
+  // compatibility (Slice 1C). Migrated value: completed = progress === COMPLETED.
+  completed     Boolean               @default(false)
+  createdAt     DateTime              @default(now()) @map("created_at")
+  updatedAt     DateTime              @updatedAt @map("updated_at")
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  learningUnits ResourceLearningUnit[]
+  learningGoals ResourceLearningGoal[]
+  sessionResources SessionResource[]
+
   @@map("resources")
+}
+
+/* ── Learning Goal / Unit status enum ─────────────── */
+enum LearningUnitStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+  REOPENED
+}
+
+/* ── Learning Goal ─────────────────────────────────── */
+model LearningGoal {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  title       String
+  description String?
+  archivedAt  DateTime? @map("archived_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  units     LearningUnit[]
+  resources ResourceLearningGoal[]
+
+  @@map("learning_goals")
+}
+
+/* ── Learning Unit ─────────────────────────────────── */
+model LearningUnit {
+  id          String            @id @default(uuid())
+  goalId      String            @map("goal_id")
+  userId      String            @map("user_id")
+  title       String
+  description String?
+  status      LearningUnitStatus @default(NOT_STARTED)
+  completedAt DateTime?         @map("completed_at")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  updatedAt   DateTime          @updatedAt @map("updated_at")
+
+  goal LearningGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  resources ResourceLearningUnit[]
+  sessions  LearningSession[]
+
+  @@map("learning_units")
+}
+
+/* ── Resource ↔ Learning Unit (M:N junction) ─────── */
+model ResourceLearningUnit {
+  id         String   @id @default(uuid())
+  resourceId String   @map("resource_id")
+  unitId     String   @map("unit_id")
+  userId     String   @map("user_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  resource Resource     @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  unit     LearningUnit @relation(fields: [unitId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, unitId])
+  @@map("resource_learning_units")
+}
+
+/* ── Resource ↔ Learning Goal (M:N junction, unassigned) ── */
+model ResourceLearningGoal {
+  id         String        @id @default(uuid())
+  resourceId String        @map("resource_id")
+  goalId     String        @map("goal_id")
+  userId     String        @map("user_id")
+  createdAt  DateTime      @default(now()) @map("created_at")
+
+  resource Resource     @relation(fields: [resourceId], references: [id], onDelete: Cascade)
+  goal     LearningGoal @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  user     User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([resourceId, goalId])
+  @@map("resource_learning_goals")
 }
 
 /* ── XpTransaction ────────────────────────────────────── */

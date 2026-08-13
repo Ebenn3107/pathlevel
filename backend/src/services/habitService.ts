@@ -1,7 +1,8 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
 import { NotFoundError } from "../types/error";
-import { XP_VALUES } from "./xpService";
+import { XP_VALUES, recordXp } from "./xpService";
+import { evaluateAchievements } from "./achievementService";
 
 export interface HabitResponse {
   id: string;
@@ -112,39 +113,6 @@ function isConsecutivePeriod(current: string, previous: string, frequency: strin
   }
 }
 
-/* ── XP Helpers ──────────────────────────────────── */
-
-async function awardHabitXp(
-  tx: Omit<typeof prisma, "$transaction" | "$connect" | "$disconnect" | "$on" | "$use" | "$extends">,
-  userId: string,
-  completionId: string,
-) {
-  const transaction = await tx.xpTransaction.create({
-    data: {
-      userId,
-      amount: XP_VALUES.habit_completed,
-      reason: "habit_completed",
-      reference: completionId,
-    },
-  });
-
-  const aggregate = await tx.xpTransaction.aggregate({
-    where: { userId },
-    _sum: { amount: true },
-  });
-  const totalXp = aggregate._sum.amount ?? 0;
-  const level = Math.floor(totalXp / 100) + 1;
-
-  await tx.user.update({
-    where: { id: userId },
-    data: { xp: totalXp, level },
-  }).catch((err: Error) => {
-    console.warn(`[xp] User ${userId} not found — XP tracked via XpTransaction only:`, err.message);
-  });
-
-  return transaction;
-}
-
 /* ── CRUD ────────────────────────────────────────── */
 
 /** Get all habits for a user. */
@@ -245,8 +213,11 @@ export async function completeHabit(
       data: { streak, bestStreak },
     });
 
-    // Award XP atomically within the same transaction
-    await awardHabitXp(tx, userId, completion.id);
+    // Award XP atomically within the same transaction (canonical recordXp)
+    await recordXp(userId, XP_VALUES.habit_completed, "habit_completed", completion.id, tx);
+
+    // Evaluate and persist newly unlocked achievements within the same transaction
+    await evaluateAchievements(userId, tx);
 
     return { habit: updated, isNew: true, completionId: completion.id };
   });

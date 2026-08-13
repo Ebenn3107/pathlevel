@@ -13,7 +13,15 @@
     "db:push": "prisma db push",
     "db:studio": "prisma studio",
     "db:seed": "npx tsx prisma/seed.ts",
-    "test:achievements": "npx tsx tests/achievements.test.ts"
+    "test:achievements": "ts-node --files tests/achievements.test.ts",
+    "test:xp": "ts-node --files tests/xp.test.ts",
+    "test:atomicity": "ts-node --files tests/atomicity.test.ts",
+    "test:resource": "ts-node --files tests/resource.test.ts",
+    "test:learning": "ts-node --files tests/learning.test.ts",
+    "test:sessions": "ts-node --files tests/sessions.test.ts",
+    "test:search": "ts-node --files tests/search.test.ts",
+    "test:metadata": "ts-node --files tests/metadata.test.ts",
+    "test": "ts-node --files tests/achievements.test.ts && ts-node --files tests/xp.test.ts && ts-node --files tests/atomicity.test.ts && ts-node --files tests/resource.test.ts && ts-node --files tests/learning.test.ts && ts-node --files tests/sessions.test.ts && ts-node --files tests/search.test.ts && ts-node --files tests/metadata.test.ts"
   },
   "keywords": [],
   "author": "",

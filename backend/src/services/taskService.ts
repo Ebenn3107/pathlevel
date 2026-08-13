@@ -1,6 +1,8 @@
 import { prisma } from "../config/database";
 import { Prisma } from "@prisma/client";
 import { NotFoundError } from "../types/error";
+import { recordXp, XP_VALUES } from "./xpService";
+import { evaluateAchievements } from "./achievementService";
 
 export interface TaskResponse {
   id: string;
@@ -29,6 +31,12 @@ export interface UpdateTaskInput {
   dueDate?: string | null;
 }
 
+/** Result of updating a task. */
+export interface UpdateTaskResult {
+  task: TaskResponse;
+  newAchievements?: { code: string; title: string; icon: string }[];
+}
+
 
 /** Get all tasks for a user. */
 export async function getTasks(userId: string): Promise<TaskResponse[]> {
@@ -54,14 +62,21 @@ export async function createTask(
   });
 }
 
-/** Update a task for a user. */
+/**
+ * Update a task for a user.
+ *
+ * A task marked complete awards XP and evaluates achievements atomically
+ * with the completion. Completing an already-completed task is a no-op for
+ * XP: the unique (userId, reason, reference) constraint makes the award
+ * idempotent, so no duplicate XP or achievement is created.
+ */
 export async function updateTask(
   id: string,
   userId: string,
   input: UpdateTaskInput,
-): Promise<TaskResponse> {
-  try {
-    return await prisma.task.update({
+): Promise<UpdateTaskResult> {
+  const persist = async (db: Prisma.TransactionClient): Promise<UpdateTaskResult> => {
+    const updated = await db.task.update({
       where: { id, userId },
       data: {
         ...(input.title !== undefined && { title: input.title }),
@@ -76,6 +91,18 @@ export async function updateTask(
         }),
       },
     });
+
+    let newAchievements: { code: string; title: string; icon: string }[] | undefined;
+    if (input.completed === true) {
+      await recordXp(userId, XP_VALUES.task_completed, "task_completed", id, db);
+      newAchievements = await evaluateAchievements(userId, db);
+    }
+
+    return { task: updated, newAchievements };
+  };
+
+  try {
+    return await prisma.$transaction(persist);
   } catch (err) {
     if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2025") {
       throw new NotFoundError("Task");

@@ -36,9 +36,19 @@ export const ACHIEVEMENT_DEFINITIONS: AchievementDef[] = [
 
 /* ── Public API ──────────────────────────────────── */
 
-/** Get all achievement definitions. */
+/**
+ * Get all achievement definitions.
+ *
+ * The database is the runtime source of truth for achievement APIs. The
+ * code-level definitions are synchronized into the database at startup
+ * (syncAchievementDefinitions), so reading here reflects the runtime state.
+ */
 export async function getAllAchievements(): Promise<AchievementDef[]> {
-  return ACHIEVEMENT_DEFINITIONS;
+  const dbAchievements = await prisma.achievement.findMany({
+    orderBy: { createdAt: "asc" },
+    select: { code: true, title: true, description: true, icon: true },
+  });
+  return dbAchievements;
 }
 
 /** Get all achievements for a user, with unlock status. */
@@ -71,24 +81,31 @@ export async function getUserAchievements(userId: string) {
  * This is the central evaluation function — call it after any source-of-truth
  * event (XP earned, habit completed, task completed, learning session created).
  */
-export async function evaluateAchievements(userId: string): Promise<{ code: string; title: string; icon: string }[]> {
+export async function evaluateAchievements(
+  userId: string,
+  client?: Prisma.TransactionClient,
+): Promise<{ code: string; title: string; icon: string }[]> {
   const newlyUnlocked: { code: string; title: string; icon: string }[] = [];
+
+  // Use the supplied transaction client so unlocks persist atomically with
+  // the triggering domain event; otherwise fall back to the shared client.
+  const db = client ?? prisma;
 
   // Gather all data needed for evaluation in parallel
   const [xpAgg, userAchievements, habitCompletions, habits, completedTasks, completedSessions] =
     await Promise.all([
-      prisma.xpTransaction.aggregate({
+      db.xpTransaction.aggregate({
         where: { userId },
         _sum: { amount: true },
       }),
-      prisma.userAchievement.findMany({
+      db.userAchievement.findMany({
         where: { userId },
         include: { achievement: true },
       }),
-      prisma.habitCompletion.count({ where: { userId } }),
-      prisma.habit.findMany({ where: { userId }, select: { streak: true } }),
-      prisma.task.count({ where: { userId, completed: true } }),
-      prisma.learningSession.count({ where: { userId, endedAt: { not: null } } }),
+      db.habitCompletion.count({ where: { userId } }),
+      db.habit.findMany({ where: { userId }, select: { streak: true } }),
+      db.task.count({ where: { userId, completed: true } }),
+      db.learningSession.count({ where: { userId, endedAt: { not: null } } }),
     ]);
 
   const totalXp = xpAgg._sum.amount ?? 0;
@@ -123,7 +140,7 @@ export async function evaluateAchievements(userId: string): Promise<{ code: stri
 
   // Unlock each one (idempotent — database unique constraint prevents duplicates)
   for (const code of codesToUnlock) {
-    const unlocked = await unlockAchievement(userId, code);
+    const unlocked = await unlockAchievement(userId, code, client);
     if (unlocked) {
       newlyUnlocked.push(unlocked);
     }
@@ -139,15 +156,18 @@ export async function evaluateAchievements(userId: string): Promise<{ code: stri
 export async function unlockAchievement(
   userId: string,
   code: string,
+  client?: Prisma.TransactionClient,
 ): Promise<{ code: string; title: string; icon: string } | null> {
-  const achievement = await prisma.achievement.findUnique({ where: { code } });
+  const db = client ?? prisma;
+
+  const achievement = await db.achievement.findUnique({ where: { code } });
   if (!achievement) {
     console.warn(`[achievement] Unknown achievement code: ${code}`);
     return null;
   }
 
   try {
-    await prisma.userAchievement.create({
+    await db.userAchievement.create({
       data: { userId, achievementId: achievement.id },
     });
     return { code: achievement.code, title: achievement.title, icon: achievement.icon };
